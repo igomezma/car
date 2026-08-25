@@ -1,0 +1,598 @@
+name: Build Coche APK
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Create Android project
+        shell: bash
+        run: |
+          set -e
+          mkdir -p app/src/main/java/com/igomezma/car
+          mkdir -p app/src/main/res/layout app/src/main/res/xml app/src/main/res/drawable app/src/main/res/values
+
+          cat > settings.gradle <<'EOF'
+          pluginManagement {
+              repositories { google(); mavenCentral(); gradlePluginPortal() }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories { google(); mavenCentral() }
+          }
+          rootProject.name = 'Coche'
+          include ':app'
+          EOF
+
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+
+          cat > app/build.gradle <<'EOF'
+          plugins { id 'com.android.application' }
+
+          android {
+              namespace 'com.igomezma.car'
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId 'com.igomezma.car'
+                  minSdk 26
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0'
+              }
+          }
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+              <uses-permission android:name="android.permission.INTERNET" />
+
+              <application
+                  android:allowBackup="true"
+                  android:icon="@drawable/car_top"
+                  android:label="Coche"
+                  android:theme="@style/AppTheme">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+
+                  <receiver
+                      android:name=".CarWidgetProvider"
+                      android:exported="false">
+                      <intent-filter>
+                          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                      </intent-filter>
+                      <meta-data
+                          android:name="android.appwidget.provider"
+                          android:resource="@xml/car_widget_info" />
+                  </receiver>
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/res/values/strings.xml <<'EOF'
+          <resources>
+              <string name="app_name">Coche</string>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:colorAccent">#F57C00</item>
+                  <item name="android:navigationBarColor">#10131A</item>
+                  <item name="android:statusBarColor">#10131A</item>
+                  <item name="android:windowLightStatusBar">false</item>
+              </style>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/drawable/car_top.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="64dp" android:height="96dp"
+              android:viewportWidth="64" android:viewportHeight="96">
+              <path android:fillColor="#F28C28" android:pathData="M20,3 C14,5 10,13 9,24 L7,71 C7,83 15,92 32,93 C49,92 57,83 57,71 L55,24 C54,13 50,5 44,3 Z"/>
+              <path android:fillColor="#D96F13" android:pathData="M10,22 L4,28 L5,43 L10,41 Z M54,22 L60,28 L59,43 L54,41 Z M9,62 L4,67 L5,82 L10,79 Z M55,62 L60,67 L59,82 L54,79 Z"/>
+              <path android:fillColor="#17202B" android:pathData="M18,22 L46,22 L50,42 L14,42 Z"/>
+              <path android:fillColor="#263747" android:pathData="M16,48 L48,48 L47,69 L17,69 Z"/>
+              <path android:fillColor="#FFF3E0" android:pathData="M17,10 L24,8 L24,12 L17,14 Z M47,10 L40,8 L40,12 L47,14 Z"/>
+              <path android:fillColor="#B74F00" android:pathData="M24,77 L40,77 L42,84 L22,84 Z"/>
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/map_placeholder.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="320dp" android:height="320dp"
+              android:viewportWidth="320" android:viewportHeight="320">
+              <path android:fillColor="#DDE3DF" android:pathData="M0,0h320v320h-320z"/>
+              <path android:strokeColor="#FFFFFF" android:strokeWidth="20" android:fillColor="@android:color/transparent" android:pathData="M-20,80 C70,20 120,150 210,88 C260,52 300,40 350,65"/>
+              <path android:strokeColor="#C7CEC9" android:strokeWidth="4" android:fillColor="@android:color/transparent" android:pathData="M-20,80 C70,20 120,150 210,88 C260,52 300,40 350,65"/>
+              <path android:strokeColor="#FFFFFF" android:strokeWidth="16" android:fillColor="@android:color/transparent" android:pathData="M40,-20 C80,70 28,140 110,190 C160,220 185,280 190,350"/>
+              <path android:strokeColor="#C7CEC9" android:strokeWidth="3" android:fillColor="@android:color/transparent" android:pathData="M40,-20 C80,70 28,140 110,190 C160,220 185,280 190,350"/>
+              <path android:fillColor="#C8DDC8" android:pathData="M220,150 C255,120 310,145 320,195 L320,260 C280,275 235,240 220,200 Z"/>
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/widget_panel.xml <<'EOF'
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#D9141820" />
+              <corners android:radius="18dp" />
+          </shape>
+          EOF
+
+          cat > app/src/main/res/drawable/widget_button.xml <<'EOF'
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#F28C28" />
+              <corners android:radius="14dp" />
+              <padding android:left="8dp" android:top="6dp" android:right="8dp" android:bottom="6dp" />
+          </shape>
+          EOF
+
+          cat > app/src/main/res/drawable/widget_button_dark.xml <<'EOF'
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#E6202630" />
+              <stroke android:width="1dp" android:color="#66FFFFFF" />
+              <corners android:radius="14dp" />
+              <padding android:left="8dp" android:top="6dp" android:right="8dp" android:bottom="6dp" />
+          </shape>
+          EOF
+
+          cat > app/src/main/res/layout/car_widget.xml <<'EOF'
+          <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@drawable/widget_panel"
+              android:padding="4dp">
+
+              <ImageView
+                  android:id="@+id/map"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:scaleType="centerCrop"
+                  android:src="@drawable/map_placeholder"
+                  android:contentDescription="Mapa" />
+
+              <ImageView
+                  android:id="@+id/car"
+                  android:layout_width="42dp"
+                  android:layout_height="62dp"
+                  android:layout_gravity="center"
+                  android:src="@drawable/car_top"
+                  android:contentDescription="Coche" />
+
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="top"
+                  android:orientation="vertical"
+                  android:padding="10dp"
+                  android:background="#B8101319">
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="COCHE"
+                      android:textColor="#FFFFFF"
+                      android:textStyle="bold"
+                      android:textSize="16sp" />
+                  <TextView
+                      android:id="@+id/status"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="Sin ubicación guardada"
+                      android:textColor="#E8FFFFFF"
+                      android:textSize="12sp" />
+              </LinearLayout>
+
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="bottom"
+                  android:orientation="horizontal"
+                  android:gravity="center"
+                  android:padding="8dp"
+                  android:background="#B8101319">
+                  <TextView
+                      android:id="@+id/save"
+                      android:layout_width="0dp"
+                      android:layout_height="44dp"
+                      android:layout_weight="1"
+                      android:gravity="center"
+                      android:background="@drawable/widget_button"
+                      android:text="GUARDAR"
+                      android:textColor="#FFFFFFFF"
+                      android:textStyle="bold" />
+                  <Space android:layout_width="8dp" android:layout_height="1dp" />
+                  <TextView
+                      android:id="@+id/navigate"
+                      android:layout_width="0dp"
+                      android:layout_height="44dp"
+                      android:layout_weight="1"
+                      android:gravity="center"
+                      android:background="@drawable/widget_button_dark"
+                      android:text="IR"
+                      android:textColor="#FFFFFFFF"
+                      android:textStyle="bold" />
+              </LinearLayout>
+          </FrameLayout>
+          EOF
+
+          cat > app/src/main/res/xml/car_widget_info.xml <<'EOF'
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="250dp"
+              android:minHeight="250dp"
+              android:minResizeWidth="180dp"
+              android:minResizeHeight="180dp"
+              android:updatePeriodMillis="0"
+              android:initialLayout="@layout/car_widget"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen"
+              android:description="@string/app_name" />
+          EOF
+
+          cat > app/src/main/java/com/igomezma/car/CarWidgetProvider.java <<'EOF'
+          package com.igomezma.car;
+
+          import android.app.PendingIntent;
+          import android.appwidget.AppWidgetManager;
+          import android.appwidget.AppWidgetProvider;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.graphics.Bitmap;
+          import android.graphics.BitmapFactory;
+          import android.widget.RemoteViews;
+          import java.io.File;
+          import java.text.DateFormat;
+          import java.util.Date;
+
+          public class CarWidgetProvider extends AppWidgetProvider {
+              public static final String PREFS = "car_prefs";
+              public static final String LAT = "lat";
+              public static final String LON = "lon";
+              public static final String TIME = "time";
+              public static final String ACTION_SAVE = "com.igomezma.car.SAVE_CAR";
+              public static final String ACTION_NAV = "com.igomezma.car.NAVIGATE_CAR";
+
+              @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
+                  for (int id : ids) updateOne(context, manager, id);
+              }
+
+              public static void updateAll(Context context) {
+                  AppWidgetManager m = AppWidgetManager.getInstance(context);
+                  int[] ids = m.getAppWidgetIds(new ComponentName(context, CarWidgetProvider.class));
+                  for (int id : ids) updateOne(context, m, id);
+              }
+
+              private static void updateOne(Context context, AppWidgetManager manager, int id) {
+                  RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.car_widget);
+                  SharedPreferences p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+                  long t = p.getLong(TIME, 0L);
+                  if (t > 0L) {
+                      rv.setTextViewText(R.id.status, "Guardado · " + DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(t)));
+                  } else {
+                      rv.setTextViewText(R.id.status, "Sin ubicación guardada");
+                  }
+
+                  File tile = new File(context.getFilesDir(), "car_map.png");
+                  if (tile.exists()) {
+                      Bitmap b = BitmapFactory.decodeFile(tile.getAbsolutePath());
+                      if (b != null) rv.setImageViewBitmap(R.id.map, b);
+                  }
+
+                  Intent save = new Intent(context, MainActivity.class).setAction(ACTION_SAVE)
+                          .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  Intent nav = new Intent(context, MainActivity.class).setAction(ACTION_NAV)
+                          .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  PendingIntent ps = PendingIntent.getActivity(context, 11, save, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  PendingIntent pn = PendingIntent.getActivity(context, 12, nav, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  rv.setOnClickPendingIntent(R.id.save, ps);
+                  rv.setOnClickPendingIntent(R.id.navigate, pn);
+                  manager.updateAppWidget(id, rv);
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/igomezma/car/MainActivity.java <<'EOF'
+          package com.igomezma.car;
+
+          import android.Manifest;
+          import android.app.Activity;
+          import android.content.ActivityNotFoundException;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.content.pm.PackageManager;
+          import android.graphics.Bitmap;
+          import android.graphics.BitmapFactory;
+          import android.graphics.Color;
+          import android.graphics.drawable.GradientDrawable;
+          import android.location.Location;
+          import android.location.LocationListener;
+          import android.location.LocationManager;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import android.provider.Settings;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.widget.Button;
+          import android.widget.ImageView;
+          import android.widget.LinearLayout;
+          import android.widget.TextView;
+          import android.widget.Toast;
+          import java.io.File;
+          import java.io.FileOutputStream;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+          import java.text.DateFormat;
+          import java.util.Date;
+          import java.util.Locale;
+
+          public class MainActivity extends Activity {
+              private static final int REQ_LOCATION = 44;
+              private TextView status;
+              private TextView coords;
+              private ImageView car;
+              private boolean saveAfterPermission;
+
+              @Override protected void onCreate(Bundle b) {
+                  super.onCreate(b);
+                  buildUi();
+                  refreshUi();
+                  handleIntent(getIntent());
+              }
+
+              @Override protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  handleIntent(intent);
+              }
+
+              private void buildUi() {
+                  getWindow().setStatusBarColor(Color.rgb(16,19,26));
+                  getWindow().setNavigationBarColor(Color.rgb(16,19,26));
+
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setPadding(dp(24), dp(26), dp(24), dp(24));
+                  root.setGravity(Gravity.CENTER_HORIZONTAL);
+                  root.setBackgroundColor(Color.rgb(16,19,26));
+
+                  TextView title = text("COCHE", 34, Color.WHITE, true);
+                  root.addView(title, new LinearLayout.LayoutParams(-1, -2));
+
+                  TextView sub = text("Aparca. Guarda. Vuelve.", 16, Color.rgb(178,188,202), false);
+                  LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-1, -2); sp.topMargin = dp(3); root.addView(sub, sp);
+
+                  car = new ImageView(this);
+                  car.setImageResource(R.drawable.car_top);
+                  car.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                  LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(dp(150), dp(215)); cp.topMargin = dp(16); root.addView(car, cp);
+
+                  status = text("Sin ubicación guardada", 20, Color.WHITE, true);
+                  status.setGravity(Gravity.CENTER);
+                  root.addView(status, new LinearLayout.LayoutParams(-1, -2));
+
+                  coords = text("Pulsa Guardar cuando aparques", 14, Color.rgb(178,188,202), false);
+                  coords.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams co = new LinearLayout.LayoutParams(-1, -2); co.topMargin = dp(8); root.addView(coords, co);
+
+                  Button save = button("GUARDAR COCHE", true);
+                  save.setOnClickListener(v -> saveLocation());
+                  LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(-1, dp(58)); bp.topMargin = dp(28); root.addView(save, bp);
+
+                  Button nav = button("NAVEGAR HASTA EL COCHE", false);
+                  nav.setOnClickListener(v -> navigate());
+                  LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(-1, dp(58)); np.topMargin = dp(12); root.addView(nav, np);
+
+                  TextView hint = text("Añade el widget Coche a la pantalla de inicio para guardar la posición con un toque.", 13, Color.rgb(139,151,166), false);
+                  hint.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2); hp.topMargin = dp(24); root.addView(hint, hp);
+
+                  setContentView(root);
+              }
+
+              private TextView text(String s, int size, int color, boolean bold) {
+                  TextView t = new TextView(this); t.setText(s); t.setTextSize(size); t.setTextColor(color);
+                  if (bold) t.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                  return t;
+              }
+
+              private Button button(String s, boolean orange) {
+                  Button b = new Button(this); b.setText(s); b.setTextColor(Color.WHITE); b.setTextSize(15);
+                  b.setAllCaps(false); b.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                  GradientDrawable gd = new GradientDrawable(); gd.setCornerRadius(dp(18));
+                  gd.setColor(orange ? Color.rgb(242,140,40) : Color.rgb(34,41,52));
+                  if (!orange) gd.setStroke(dp(1), Color.rgb(86,98,114));
+                  b.setBackground(gd); return b;
+              }
+
+              private void handleIntent(Intent i) {
+                  if (i == null) return;
+                  String a = i.getAction();
+                  if (CarWidgetProvider.ACTION_SAVE.equals(a)) saveLocation();
+                  else if (CarWidgetProvider.ACTION_NAV.equals(a)) navigate();
+              }
+
+              private void saveLocation() {
+                  if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                      checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                      saveAfterPermission = true;
+                      requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_LOCATION);
+                      return;
+                  }
+                  LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+                  boolean gps = false, net = false;
+                  try { gps = lm.isProviderEnabled(LocationManager.GPS_PROVIDER); } catch (Exception ignored) {}
+                  try { net = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER); } catch (Exception ignored) {}
+                  if (!gps && !net) {
+                      Toast.makeText(this, "Activa la ubicación del teléfono", Toast.LENGTH_LONG).show();
+                      try { startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)); } catch (Exception ignored) {}
+                      return;
+                  }
+
+                  Location best = null;
+                  try { best = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER); } catch (Exception ignored) {}
+                  try {
+                      Location n = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                      if (n != null && (best == null || n.getTime() > best.getTime())) best = n;
+                  } catch (Exception ignored) {}
+                  if (best != null && System.currentTimeMillis() - best.getTime() < 120000L) {
+                      store(best);
+                      return;
+                  }
+
+                  status.setText("Buscando ubicación…");
+                  LocationListener listener = new LocationListener() {
+                      @Override public void onLocationChanged(Location location) {
+                          try { lm.removeUpdates(this); } catch (Exception ignored) {}
+                          store(location);
+                      }
+                      @Override public void onProviderEnabled(String provider) {}
+                      @Override public void onProviderDisabled(String provider) {}
+                      @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
+                  };
+                  try {
+                      String provider = gps ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
+                      lm.requestLocationUpdates(provider, 0L, 0f, listener);
+                      final LocationListener fl = listener;
+                      status.postDelayed(() -> {
+                          try { lm.removeUpdates(fl); } catch (Exception ignored) {}
+                          SharedPreferences p = getSharedPreferences(CarWidgetProvider.PREFS, MODE_PRIVATE);
+                          if (p.getLong(CarWidgetProvider.TIME, 0L) == 0L) status.setText("No he podido obtener la ubicación");
+                      }, 15000L);
+                  } catch (SecurityException e) {
+                      Toast.makeText(this, "Falta permiso de ubicación", Toast.LENGTH_SHORT).show();
+                  }
+              }
+
+              private void store(Location l) {
+                  getSharedPreferences(CarWidgetProvider.PREFS, MODE_PRIVATE).edit()
+                      .putLong(CarWidgetProvider.TIME, System.currentTimeMillis())
+                      .putString(CarWidgetProvider.LAT, Double.toString(l.getLatitude()))
+                      .putString(CarWidgetProvider.LON, Double.toString(l.getLongitude())).apply();
+                  Toast.makeText(this, "Coche guardado", Toast.LENGTH_SHORT).show();
+                  refreshUi();
+                  CarWidgetProvider.updateAll(this);
+                  downloadMapTile(l.getLatitude(), l.getLongitude());
+              }
+
+              private void refreshUi() {
+                  SharedPreferences p = getSharedPreferences(CarWidgetProvider.PREFS, MODE_PRIVATE);
+                  long t = p.getLong(CarWidgetProvider.TIME, 0L);
+                  String la = p.getString(CarWidgetProvider.LAT, null);
+                  String lo = p.getString(CarWidgetProvider.LON, null);
+                  if (t > 0 && la != null && lo != null) {
+                      status.setText("Coche guardado");
+                      try { coords.setText(String.format(Locale.getDefault(), "%s · %.5f, %.5f", DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(t)), Double.parseDouble(la), Double.parseDouble(lo))); }
+                      catch (Exception e) { coords.setText("Ubicación disponible"); }
+                  } else {
+                      status.setText("Sin ubicación guardada");
+                      coords.setText("Pulsa Guardar cuando aparques");
+                  }
+              }
+
+              private void navigate() {
+                  SharedPreferences p = getSharedPreferences(CarWidgetProvider.PREFS, MODE_PRIVATE);
+                  String la = p.getString(CarWidgetProvider.LAT, null), lo = p.getString(CarWidgetProvider.LON, null);
+                  if (la == null || lo == null) {
+                      Toast.makeText(this, "Primero guarda dónde está el coche", Toast.LENGTH_LONG).show(); return;
+                  }
+                  Uri web = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=" + la + "," + lo + "&travelmode=walking");
+                  try { startActivity(new Intent(Intent.ACTION_VIEW, web)); }
+                  catch (ActivityNotFoundException e) { Toast.makeText(this, "No hay una aplicación de mapas disponible", Toast.LENGTH_LONG).show(); }
+              }
+
+              private void downloadMapTile(double lat, double lon) {
+                  new Thread(() -> {
+                      HttpURLConnection c = null;
+                      try {
+                          int z = 16;
+                          int n = 1 << z;
+                          int x = (int)Math.floor((lon + 180.0) / 360.0 * n);
+                          double latRad = Math.toRadians(lat);
+                          int y = (int)Math.floor((1.0 - Math.log(Math.tan(latRad) + 1.0 / Math.cos(latRad)) / Math.PI) / 2.0 * n);
+                          URL u = new URL("https://tile.openstreetmap.org/" + z + "/" + x + "/" + y + ".png");
+                          c = (HttpURLConnection)u.openConnection();
+                          c.setConnectTimeout(7000); c.setReadTimeout(7000);
+                          c.setRequestProperty("User-Agent", "CocheParkingWidget/1.0 personal use");
+                          Bitmap bm = BitmapFactory.decodeStream(c.getInputStream());
+                          if (bm != null) {
+                              File f = new File(getFilesDir(), "car_map.png");
+                              try (FileOutputStream out = new FileOutputStream(f)) { bm.compress(Bitmap.CompressFormat.PNG, 100, out); }
+                              runOnUiThread(() -> CarWidgetProvider.updateAll(this));
+                          }
+                      } catch (Exception ignored) {
+                      } finally { if (c != null) c.disconnect(); }
+                  }).start();
+              }
+
+              @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                  if (requestCode == REQ_LOCATION && saveAfterPermission) {
+                      saveAfterPermission = false;
+                      if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) saveLocation();
+                      else Toast.makeText(this, "Necesito permiso de ubicación para guardar el coche", Toast.LENGTH_LONG).show();
+                  }
+              }
+
+              private int dp(int v) { return (int)(v * getResources().getDisplayMetrics().density + 0.5f); }
+          }
+          EOF
+
+      - name: Build debug APK
+        run: gradle --no-daemon :app:assembleDebug
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk Coche-1.0-debug.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Coche-APK
+          path: Coche-1.0-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish downloadable APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Coche APK build ${{ github.run_number }}
+          prerelease: true
+          files: Coche-1.0-debug.apk
+
