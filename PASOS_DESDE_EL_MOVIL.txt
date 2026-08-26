@@ -1,0 +1,14 @@
+MI COCHE — SUBIR Y COMPILAR DESDE EL MÓVIL
+
+1) Descomprime MiCoche_GitHub.zip.
+2) En GitHub abre tu repositorio "car".
+3) Sube A LA RAÍZ del repositorio: app, .github, build.gradle, settings.gradle, gradle.properties y README.md.
+4) Abre la pestaña Actions.
+5) Entra en "Compilar APK Mi Coche".
+6) Pulsa "Run workflow".
+7) Espera a que salga el círculo verde.
+8) Abre esa ejecución y baja "MiCoche-APK".
+9) Descomprime ese archivo y encontrarás app-debug.apk.
+10) Instálalo en el Xiaomi.
+
+La cabecera ya incluye el espacio superior para que "Mi Coche" no se solape con hora, batería, Wi‑Fi, etc.
