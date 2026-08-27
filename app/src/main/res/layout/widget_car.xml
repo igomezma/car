@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_card"
+    android:background="@drawable/bg_widget"
     android:orientation="vertical"
-    android:padding="14dp">
+    android:padding="12dp">
 
     <LinearLayout
+        android:id="@+id/widgetHeader"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="42dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <ImageView
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:contentDescription="Mi Coche"
             android:scaleType="centerCrop"
             android:src="@drawable/app_icon" />
 
@@ -37,6 +40,8 @@
                 android:id="@+id/widgetStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Sin ubicación guardada"
                 android:textColor="@color/orange"
                 android:textSize="11sp" />
@@ -51,39 +56,41 @@
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:maxLines="2"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
         android:text="Abre la app para guardar dónde está el coche"
         android:textColor="@color/muted"
-        android:textSize="13sp" />
+        android:textSize="12sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:orientation="horizontal">
 
-        <Button
+        <TextView
             android:id="@+id/widgetSave"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@drawable/bg_primary_button"
+            android:gravity="center"
             android:text="Guardar"
-            android:textAllCaps="false"
             android:textColor="@color/white"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:textStyle="bold" />
 
-        <Space
-            android:layout_width="7dp"
-            android:layout_height="1dp" />
-
-        <Button
+        <TextView
             android:id="@+id/widgetNavigate"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_marginStart="7dp"
             android:layout_weight="1"
             android:background="@drawable/bg_outline_button"
+            android:gravity="center"
             android:text="Ir al coche"
-            android:textAllCaps="false"
             android:textColor="@color/orange"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:textStyle="bold" />
     </LinearLayout>
+
 </LinearLayout>

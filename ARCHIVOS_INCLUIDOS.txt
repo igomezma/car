@@ -2,6 +2,7 @@
 BORRAR_ARCHIVOS_ANTIGUOS.txt
 PASOS_DESDE_EL_MOVIL.txt
 README.md
+WIDGET_REVISADO.txt
 app/build.gradle
 app/src/main/AndroidManifest.xml
 app/src/main/java/com/inaki/micoche/CarStorage.java
@@ -13,6 +14,7 @@ app/src/main/res/drawable/bg_outline_button.xml
 app/src/main/res/drawable/bg_primary_button.xml
 app/src/main/res/drawable/bg_settings.xml
 app/src/main/res/drawable/bg_tip.xml
+app/src/main/res/drawable/bg_widget.xml
 app/src/main/res/drawable/ic_car_top.xml
 app/src/main/res/drawable/ic_settings.xml
 app/src/main/res/drawable-nodpi/app_icon.png

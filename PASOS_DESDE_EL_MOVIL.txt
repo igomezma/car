@@ -1,14 +1,14 @@
-MI COCHE v1.2 - SUBIR DESDE EL MOVIL
+MI COCHE v1.3 - SUBIR DESDE EL MOVIL
 
 1. Descomprime este ZIP.
 2. En tu repositorio GitHub "car", sustituye los archivos del proyecto por los de esta carpeta.
    Antes, mira BORRAR_ARCHIVOS_ANTIGUOS.txt y elimina los workflows viejos indicados.
 3. IMPORTANTE: conserva exactamente la carpeta .github/workflows/ y su archivo build-apk.yml.
 4. Haz Commit directamente a main.
-5. En GitHub entra en Actions > Build Mi Coche v1.2.
+5. En GitHub entra en Actions > Build Mi Coche v1.3.
 6. Cuando termine en verde, abre la ejecución.
-7. Baja a Artifacts y toca MiCoche-v1.2-APK.
-8. Descarga el ZIP del artefacto y dentro estará MiCoche-v1.2.apk.
+7. Baja a Artifacts y toca MiCoche-v1.3-APK.
+8. Descarga el ZIP del artefacto y dentro estará MiCoche-v1.3.apk.
 
 CAMBIOS:
 - Ya NO existe ScrollView en activity_main.xml.
@@ -16,3 +16,5 @@ CAMBIOS:
 - La zona superior respeta hora/bateria.
 - El mapa cambia de altura automaticamente segun el telefono.
 - Nuevo icono minimalista naranja y oscuro.
+
+AL INSTALAR v1.3: elimina el widget viejo del escritorio y vuelve a añadirlo.

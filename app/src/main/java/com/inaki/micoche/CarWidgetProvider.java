@@ -11,57 +11,113 @@ import android.widget.RemoteViews;
 import android.widget.Toast;
 
 public class CarWidgetProvider extends AppWidgetProvider {
-    public static final String ACTION_NAVIGATE = "com.inaki.micoche.widget.NAVIGATE";
+
+    public static final String ACTION_NAVIGATE =
+            "com.inaki.micoche.widget.NAVIGATE";
+
+    @Override
+    public void onEnabled(Context context) {
+        super.onEnabled(context);
+        updateAll(context);
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
-        for (int appWidgetId : appWidgetIds) updateOne(context, manager, appWidgetId);
+        for (int appWidgetId : appWidgetIds) {
+            updateOne(context, manager, appWidgetId);
+        }
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        if (ACTION_NAVIGATE.equals(intent.getAction())) navigate(context);
+
+        if (ACTION_NAVIGATE.equals(intent.getAction())) {
+            navigate(context);
+        }
     }
 
     public static void updateAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        ComponentName name = new ComponentName(context, CarWidgetProvider.class);
-        int[] ids = manager.getAppWidgetIds(name);
-        for (int id : ids) updateOne(context, manager, id);
+        ComponentName provider = new ComponentName(context, CarWidgetProvider.class);
+        int[] ids = manager.getAppWidgetIds(provider);
+
+        for (int id : ids) {
+            updateOne(context, manager, id);
+        }
     }
 
-    private static void updateOne(Context context, AppWidgetManager manager, int appWidgetId) {
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_car);
-        boolean has = CarStorage.hasCar(context);
+    private static void updateOne(
+            Context context,
+            AppWidgetManager manager,
+            int appWidgetId) {
 
-        if (has) {
+        RemoteViews views =
+                new RemoteViews(context.getPackageName(), R.layout.widget_car);
+
+        boolean hasCar = CarStorage.hasCar(context);
+
+        if (hasCar) {
             String address = CarStorage.address(context);
+
             if (address == null || address.trim().isEmpty()) {
-                address = String.format(java.util.Locale.US, "%.6f, %.6f", CarStorage.lat(context), CarStorage.lon(context));
+                address = String.format(
+                        java.util.Locale.US,
+                        "%.6f, %.6f",
+                        CarStorage.lat(context),
+                        CarStorage.lon(context));
             }
+
             views.setTextViewText(R.id.widgetStatus, "Coche guardado");
             views.setTextViewText(R.id.widgetAddress, address);
+            views.setFloat(R.id.widgetNavigate, "setAlpha", 1f);
+
         } else {
             views.setTextViewText(R.id.widgetStatus, "Sin ubicación guardada");
-            views.setTextViewText(R.id.widgetAddress, "Toca Guardar para registrar dónde está el coche");
+            views.setTextViewText(
+                    R.id.widgetAddress,
+                    "Pulsa Guardar para registrar dónde está el coche");
+            views.setFloat(R.id.widgetNavigate, "setAlpha", 0.45f);
         }
 
-        Intent open = new Intent(context, MainActivity.class);
-        PendingIntent openPending = PendingIntent.getActivity(context, appWidgetId * 10, open,
+        // Abrir la aplicación tocando cabecera, dirección o fondo.
+        Intent openIntent = new Intent(context, MainActivity.class);
+        openIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        PendingIntent openPending = PendingIntent.getActivity(
+                context,
+                appWidgetId * 100,
+                openIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        views.setOnClickPendingIntent(R.id.widgetRoot, openPending);
+        views.setOnClickPendingIntent(R.id.widgetHeader, openPending);
         views.setOnClickPendingIntent(R.id.widgetAddress, openPending);
 
-        Intent save = new Intent(context, MainActivity.class);
-        save.setAction(MainActivity.ACTION_SAVE_NOW);
-        PendingIntent savePending = PendingIntent.getActivity(context, appWidgetId * 10 + 1, save,
+        // Guardar coche: abre MainActivity indicando que debe guardar inmediatamente.
+        Intent saveIntent = new Intent(context, MainActivity.class);
+        saveIntent.setAction(MainActivity.ACTION_SAVE_NOW);
+        saveIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        PendingIntent savePending = PendingIntent.getActivity(
+                context,
+                appWidgetId * 100 + 1,
+                saveIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
         views.setOnClickPendingIntent(R.id.widgetSave, savePending);
 
-        Intent nav = new Intent(context, CarWidgetProvider.class);
-        nav.setAction(ACTION_NAVIGATE);
-        PendingIntent navPending = PendingIntent.getBroadcast(context, appWidgetId * 10 + 2, nav,
+        // Ir al coche: broadcast al AppWidgetProvider.
+        Intent navIntent = new Intent(context, CarWidgetProvider.class);
+        navIntent.setAction(ACTION_NAVIGATE);
+        navIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+
+        PendingIntent navPending = PendingIntent.getBroadcast(
+                context,
+                appWidgetId * 100 + 2,
+                navIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
         views.setOnClickPendingIntent(R.id.widgetNavigate, navPending);
 
         manager.updateAppWidget(appWidgetId, views);
@@ -69,21 +125,31 @@ public class CarWidgetProvider extends AppWidgetProvider {
 
     private static void navigate(Context context) {
         if (!CarStorage.hasCar(context)) {
-            Toast.makeText(context, "Primero guarda la ubicación del coche", Toast.LENGTH_SHORT).show();
+            Toast.makeText(
+                    context,
+                    "Primero guarda la ubicación del coche",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
+
         double lat = CarStorage.lat(context);
         double lon = CarStorage.lon(context);
-        Uri googleNav = Uri.parse("google.navigation:q=" + lat + "," + lon + "&mode=w");
-        Intent intent = new Intent(Intent.ACTION_VIEW, googleNav);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setPackage("com.google.android.apps.maps");
+
+        Intent googleMaps = new Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("google.navigation:q=" + lat + "," + lon + "&mode=w"));
+
+        googleMaps.setPackage("com.google.android.apps.maps");
+        googleMaps.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
         try {
-            context.startActivity(intent);
+            context.startActivity(googleMaps);
         } catch (Exception e) {
-            Intent fallback = new Intent(Intent.ACTION_VIEW,
+            Intent fallback = new Intent(
+                    Intent.ACTION_VIEW,
                     Uri.parse("geo:0,0?q=" + lat + "," + lon + "(Mi%20Coche)"));
-            fallback.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(fallback);
         }
     }

@@ -329,7 +329,7 @@ public class MainActivity extends Activity {
 
     private void showSettings() {
         new AlertDialog.Builder(this)
-                .setTitle("Mi Coche · v1.2")
+                .setTitle("Mi Coche · v1.3")
                 .setMessage("Interfaz compacta sin desplazamiento.\n\nEl mapa se adapta al alto disponible y la aplicación respeta la barra superior del teléfono.\n\nMapa: OpenStreetMap")
                 .setPositiveButton("Aceptar", null)
                 .show();
@@ -379,6 +379,17 @@ public class MainActivity extends Activity {
         if (requestCode == REQ_LOCATION) {
             if (hasLocationPermission()) saveCurrentLocation();
             else Toast.makeText(this, "Necesito permiso de ubicación para guardar el coche", Toast.LENGTH_LONG).show();
+        }
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        if (ACTION_SAVE_NOW.equals(intent.getAction())) {
+            rootView.postDelayed(this::saveCurrentLocation, 150);
         }
     }
 

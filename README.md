@@ -1,8 +1,8 @@
-# Mi Coche v1.2
+# Mi Coche v1.3
 
 Aplicación Android para guardar la ubicación del coche, verla en el mapa, navegar hasta ella, compartirla y usar un widget en la pantalla de inicio.
 
-## Cambios principales de v1.2
+## Cambios principales de v1.3
 
 - Pantalla principal completamente fija: **sin ScrollView y sin desplazamiento vertical**.
 - Respeta la barra superior del sistema (hora, batería, Wi‑Fi, etc.).
@@ -16,3 +16,7 @@ Aplicación Android para guardar la ubicación del coche, verla en el mapa, nave
 
 Sube todo el contenido de este proyecto al repositorio `car` en la rama `main`.
 El workflow `.github/workflows/build-apk.yml` compila automáticamente y crea el artefacto `MiCoche-v1.2-APK`.
+
+
+### Corrección del widget v1.3
+Se ha rehecho el layout del widget usando únicamente vistas compatibles con RemoteViews y se ha reforzado el manejo de los PendingIntent.

@@ -1,0 +1,18 @@
+MI COCHE v1.3 - REVISION DEL WIDGET
+
+CAMBIOS:
+- Eliminado <Space>, que no es compatible de forma fiable con RemoteViews.
+- El widget usa solamente LinearLayout, ImageView y TextView.
+- Los botones del widget ahora son TextView clicables, más compatibles con launchers Xiaomi/HyperOS.
+- Tocar la cabecera, la dirección o el fondo abre la aplicación.
+- Guardar funciona incluso si la Activity ya estaba abierta (onNewIntent).
+- Ir al coche mantiene navegación por Google Maps con alternativa geo:.
+- El widget se actualiza al añadirse y después de guardar/borrar ubicación.
+- Tamaño mínimo ligeramente aumentado para evitar recortes.
+
+IMPORTANTE AL PROBAR:
+1. Instala la v1.3 encima de la v1.2.
+2. BORRA el widget antiguo de la pantalla de inicio.
+3. Vuelve a añadir el widget "Mi Coche".
+   Android/HyperOS puede conservar una instancia antigua del RemoteViews tras actualizar una APK.
+4. Prueba Guardar, Ir al coche y tocar la dirección.
