@@ -15,17 +15,13 @@ public class CarWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
-        for (int appWidgetId : appWidgetIds) {
-            updateOne(context, manager, appWidgetId);
-        }
+        for (int appWidgetId : appWidgetIds) updateOne(context, manager, appWidgetId);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        if (ACTION_NAVIGATE.equals(intent.getAction())) {
-            navigate(context);
-        }
+        if (ACTION_NAVIGATE.equals(intent.getAction())) navigate(context);
     }
 
     public static void updateAll(Context context) {
@@ -37,8 +33,8 @@ public class CarWidgetProvider extends AppWidgetProvider {
 
     private static void updateOne(Context context, AppWidgetManager manager, int appWidgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_car);
-
         boolean has = CarStorage.hasCar(context);
+
         if (has) {
             String address = CarStorage.address(context);
             if (address == null || address.trim().isEmpty()) {
@@ -52,22 +48,19 @@ public class CarWidgetProvider extends AppWidgetProvider {
         }
 
         Intent open = new Intent(context, MainActivity.class);
-        PendingIntent openPending = PendingIntent.getActivity(
-                context, appWidgetId * 10, open,
+        PendingIntent openPending = PendingIntent.getActivity(context, appWidgetId * 10, open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.widgetAddress, openPending);
 
         Intent save = new Intent(context, MainActivity.class);
         save.setAction(MainActivity.ACTION_SAVE_NOW);
-        PendingIntent savePending = PendingIntent.getActivity(
-                context, appWidgetId * 10 + 1, save,
+        PendingIntent savePending = PendingIntent.getActivity(context, appWidgetId * 10 + 1, save,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.widgetSave, savePending);
 
         Intent nav = new Intent(context, CarWidgetProvider.class);
         nav.setAction(ACTION_NAVIGATE);
-        PendingIntent navPending = PendingIntent.getBroadcast(
-                context, appWidgetId * 10 + 2, nav,
+        PendingIntent navPending = PendingIntent.getBroadcast(context, appWidgetId * 10 + 2, nav,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.widgetNavigate, navPending);
 

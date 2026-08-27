@@ -22,7 +22,6 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,7 +34,7 @@ public class MainActivity extends Activity {
     public static final String ACTION_SAVE_NOW = "com.inaki.micoche.SAVE_NOW";
     private static final int REQ_LOCATION = 10;
 
-    private ScrollView rootScroll;
+    private View rootView;
     private WebView mapWeb;
     private ImageView mapCar;
     private TextView mapTip;
@@ -65,13 +64,11 @@ public class MainActivity extends Activity {
         refreshUi();
         refreshDistanceFromLastKnown();
 
-        if (saveImmediately) {
-            rootScroll.postDelayed(this::saveCurrentLocation, 250);
-        }
+        if (saveImmediately) rootView.postDelayed(this::saveCurrentLocation, 250);
     }
 
     private void bindViews() {
-        rootScroll = findViewById(R.id.rootScroll);
+        rootView = findViewById(R.id.rootView);
         mapWeb = findViewById(R.id.mapWeb);
         mapCar = findViewById(R.id.mapCar);
         mapTip = findViewById(R.id.mapTip);
@@ -84,15 +81,16 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Esta es la corrección concreta de la zona superior:
-     * añadimos el alto real de la barra de estado + 12 dp de aire.
-     * Así "Mi Coche" nunca se solapa con hora, batería, Wi‑Fi, etc.
+     * Pantalla fija sin ScrollView.
+     * Android 15/16 puede dibujar edge-to-edge; aquí reservamos explícitamente
+     * la barra superior (hora/batería) y la barra de navegación inferior.
      */
     private void configureSafeArea() {
-        final int side = dp(20);
-        final int extraTop = dp(12);
-        final int extraBottom = dp(10);
-        rootScroll.setOnApplyWindowInsetsListener((v, insets) -> {
+        final int side = dp(16);
+        final int extraTop = dp(6);
+        final int extraBottom = dp(6);
+
+        rootView.setOnApplyWindowInsetsListener((v, insets) -> {
             int top;
             int bottom;
             if (Build.VERSION.SDK_INT >= 30) {
@@ -107,7 +105,7 @@ public class MainActivity extends Activity {
             v.setPadding(side, top + extraTop, side, bottom + extraBottom);
             return insets;
         });
-        rootScroll.requestApplyInsets();
+        rootView.requestApplyInsets();
     }
 
     private void configureMap() {
@@ -118,6 +116,7 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         mapWeb.setVerticalScrollBarEnabled(false);
         mapWeb.setHorizontalScrollBarEnabled(false);
+        mapWeb.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         mapWeb.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_UP) navigateToCar();
@@ -137,13 +136,13 @@ public class MainActivity extends Activity {
     private void refreshUi() {
         boolean has = CarStorage.hasCar(this);
         mapCar.setVisibility(has ? View.VISIBLE : View.GONE);
-        mapTip.setText(has ? "Toca el mapa para ir al coche" : "Guarda el coche para fijarlo en el mapa");
+        mapTip.setText(has ? "Toca el mapa para ir al coche" : "Guarda aquí para fijar el coche");
         navButton.setEnabled(has);
-        navButton.setAlpha(has ? 1f : 0.45f);
+        navButton.setAlpha(has ? 1f : 0.42f);
 
         if (!has) {
             statusTitle.setText("Coche no guardado");
-            savedAgo.setText("Pulsa Guardar coche aquí");
+            savedAgo.setText("Pulsa Guardar aquí");
             distanceText.setText("—");
             addressText.setText("Todavía no hay una ubicación guardada");
             coordsText.setText("");
@@ -330,8 +329,8 @@ public class MainActivity extends Activity {
 
     private void showSettings() {
         new AlertDialog.Builder(this)
-                .setTitle("Mi Coche")
-                .setMessage("Versión 1.1\n\nMapa: OpenStreetMap\n\nLa franja superior está adaptada a la barra de estado del teléfono para evitar solapamientos.")
+                .setTitle("Mi Coche · v1.2")
+                .setMessage("Interfaz compacta sin desplazamiento.\n\nEl mapa se adapta al alto disponible y la aplicación respeta la barra superior del teléfono.\n\nMapa: OpenStreetMap")
                 .setPositiveButton("Aceptar", null)
                 .show();
     }
@@ -363,9 +362,9 @@ public class MainActivity extends Activity {
         long seconds = Math.max(0, (System.currentTimeMillis() - time) / 1000L);
         if (seconds < 45) return "Guardado ahora";
         long minutes = seconds / 60L;
-        if (minutes < 60) return "Guardado hace " + minutes + (minutes == 1 ? " min" : " min");
+        if (minutes < 60) return "Guardado hace " + minutes + " min";
         long hours = minutes / 60L;
-        if (hours < 24) return "Guardado hace " + hours + (hours == 1 ? " h" : " h");
+        if (hours < 24) return "Guardado hace " + hours + " h";
         long days = hours / 24L;
         return "Guardado hace " + days + (days == 1 ? " día" : " días");
     }

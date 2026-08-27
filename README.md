@@ -1,27 +1,18 @@
-# Mi Coche 1.1
+# Mi Coche v1.2
 
-Aplicación Android para guardar la ubicación del coche, navegar hasta él y compartir su posición.
+Aplicación Android para guardar la ubicación del coche, verla en el mapa, navegar hasta ella, compartirla y usar un widget en la pantalla de inicio.
 
-## Cambios de esta versión
+## Cambios principales de v1.2
 
-- Corrección de la parte superior: el encabezado respeta la barra de estado de Android y deja 12 dp extra de separación.
-- Diseño oscuro con naranja Atacama.
-- Mapa OpenStreetMap sin clave API.
-- Guardado de ubicación GPS y dirección aproximada.
-- Distancia al coche.
-- Botón para abrir navegación.
-- Compartir ubicación.
-- Borrar ubicación.
-- Widget funcional con Guardar e Ir al coche.
-- Compilación automática gratuita con GitHub Actions.
+- Pantalla principal completamente fija: **sin ScrollView y sin desplazamiento vertical**.
+- Respeta la barra superior del sistema (hora, batería, Wi‑Fi, etc.).
+- El mapa usa `layout_weight=1` y se adapta al espacio libre del teléfono.
+- Interfaz más minimalista y compacta.
+- Nuevo icono naranja/charcoal usado también en la cabecera y el widget.
+- Botones principales en una sola fila para ahorrar altura.
+- Widget conservado y actualizado visualmente.
 
-## Compilar gratis en GitHub
+## Compilar con GitHub Actions
 
-1. Sube el contenido de esta carpeta a la raíz del repositorio.
-2. En GitHub abre la pestaña **Actions**.
-3. Entra en **Compilar APK Mi Coche**.
-4. Pulsa **Run workflow**.
-5. Cuando termine, abre la ejecución y baja el artefacto **MiCoche-APK**.
-6. Dentro del ZIP está `app-debug.apk`, listo para instalar en Android.
-
-También se compila automáticamente cada vez que haces un cambio en `main` o `master`.
+Sube todo el contenido de este proyecto al repositorio `car` en la rama `main`.
+El workflow `.github/workflows/build-apk.yml` compila automáticamente y crea el artefacto `MiCoche-v1.2-APK`.

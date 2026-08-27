@@ -1,0 +1,11 @@
+ANTES DE SUBIR LA v1.2 A TU REPOSITORIO "car"
+
+Si todavía existen en GitHub, borra estos archivos antiguos para evitar confusiones:
+
+1. .github/workflows/build-car-apk-v06-FINAL.yml
+2. build-apk.yml   (el antiguo que estaba en la raíz del repositorio)
+
+DEJA únicamente este workflow de compilación:
+.github/workflows/build-apk.yml
+
+No hace falta borrar datos de la aplicación del móvil: la v1.2 mantiene el mismo applicationId (com.inaki.micoche), así que al instalarla encima conserva la ubicación guardada.

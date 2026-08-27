@@ -1,218 +1,242 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/rootScroll"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg"
-    android:clipToPadding="false"
-    android:fillViewport="true"
-    android:scrollbars="none">
+    android:orientation="vertical"
+    android:clipToPadding="false">
 
+    <!-- Cabecera compacta: siempre debajo de la barra de estado -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="62dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:contentDescription="Icono Mi Coche"
+            android:scaleType="centerCrop"
+            android:src="@drawable/app_icon" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mi Coche"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="@string/tagline"
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/settingsButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_settings"
+            android:contentDescription="Ajustes"
+            android:padding="11dp"
+            android:src="@drawable/ic_settings" />
+    </LinearLayout>
+
+    <!-- El mapa es el bloque flexible. Se adapta al alto disponible; no hay ScrollView. -->
+    <FrameLayout
+        android:id="@+id/mapFrame"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_card">
+
+        <WebView
+            android:id="@+id/mapWeb"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:id="@+id/mapCar"
+            android:layout_width="42dp"
+            android:layout_height="68dp"
+            android:layout_gravity="center"
+            android:contentDescription="Coche guardado"
+            android:src="@drawable/ic_car_top" />
+
+        <TextView
+            android:id="@+id/mapTip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_tip"
+            android:text="Toca el mapa para ir al coche"
+            android:textColor="@color/white"
+            android:textSize="12sp" />
+    </FrameLayout>
+
+    <!-- Ficha compacta: toda la información importante sin ocupar media pantalla -->
+    <LinearLayout
+        android:id="@+id/infoCard"
+        android:layout_width="match_parent"
+        android:layout_height="108dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:paddingStart="14dp"
+        android:paddingTop="11dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="9dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingTop="4dp"
-            android:paddingBottom="18dp">
+            android:orientation="horizontal">
 
-            <FrameLayout
-                android:layout_width="62dp"
-                android:layout_height="62dp"
-                android:background="@drawable/bg_icon_tile"
-                android:padding="7dp">
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="Icono Mi Coche"
-                    android:src="@drawable/ic_launcher_foreground" />
-            </FrameLayout>
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="46dp"
+                android:contentDescription="Coche"
+                android:src="@drawable/ic_car_top" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:paddingStart="14dp">
+                android:paddingStart="10dp">
+
                 <TextView
+                    android:id="@+id/statusTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Mi Coche"
+                    android:text="Coche guardado"
                     android:textColor="@color/orange"
-                    android:textSize="31sp" />
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
                 <TextView
+                    android:id="@+id/savedAgo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/tagline"
+                    android:layout_marginTop="1dp"
+                    android:text="Ubicación guardada"
                     android:textColor="@color/muted"
-                    android:textSize="16sp" />
-            </LinearLayout>
-
-            <ImageButton
-                android:id="@+id/settingsButton"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="@drawable/bg_settings"
-                android:contentDescription="Ajustes"
-                android:padding="14dp"
-                android:src="@drawable/ic_settings" />
-        </LinearLayout>
-
-        <FrameLayout
-            android:id="@+id/mapFrame"
-            android:layout_width="match_parent"
-            android:layout_height="390dp">
-
-            <WebView
-                android:id="@+id/mapWeb"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <ImageView
-                android:id="@+id/mapCar"
-                android:layout_width="56dp"
-                android:layout_height="88dp"
-                android:layout_gravity="center"
-                android:contentDescription="Coche guardado"
-                android:src="@drawable/ic_car_top" />
-
-            <TextView
-                android:id="@+id/mapTip"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_tip"
-                android:text="Toca el mapa para ir al coche"
-                android:textColor="@color/white"
-                android:textSize="15sp" />
-        </FrameLayout>
-
-        <LinearLayout
-            android:id="@+id/infoCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_card"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-                <ImageView
-                    android:layout_width="44dp"
-                    android:layout_height="70dp"
-                    android:contentDescription="Coche"
-                    android:src="@drawable/ic_car_top" />
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingStart="14dp">
-                    <TextView
-                        android:id="@+id/statusTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Coche guardado"
-                        android:textColor="@color/orange"
-                        android:textSize="24sp" />
-                    <TextView
-                        android:id="@+id/savedAgo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Ubicación guardada"
-                        android:textColor="@color/muted"
-                        android:textSize="16sp" />
-                </LinearLayout>
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/distanceText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:text="—"
                 android:textColor="@color/white"
-                android:textSize="42sp" />
-
-            <TextView
-                android:id="@+id/addressText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Todavía no hay una ubicación guardada"
-                android:textColor="@color/white"
-                android:textSize="18sp" />
-
-            <TextView
-                android:id="@+id/coordsText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text=""
-                android:textColor="@color/muted2"
-                android:textSize="14sp" />
+                android:textSize="27sp"
+                android:textStyle="bold" />
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/addressText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Todavía no hay una ubicación guardada"
+            android:textColor="@color/white"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/coordsText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text=""
+            android:textColor="@color/muted2"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Acciones principales en una sola fila -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/saveButton"
-            android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:layout_marginTop="14dp"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:background="@drawable/bg_primary_button"
-            android:text="Guardar coche aquí"
+            android:text="Guardar aquí"
             android:textAllCaps="false"
             android:textColor="@color/white"
-            android:textSize="20sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Space
+            android:layout_width="8dp"
+            android:layout_height="1dp" />
 
         <Button
             android:id="@+id/navButton"
-            android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:layout_marginTop="10dp"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:background="@drawable/bg_outline_button"
             android:text="Ir al coche"
             android:textAllCaps="false"
             android:textColor="@color/orange"
-            android:textSize="19sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/shareButton"
-                android:layout_width="0dp"
-                android:layout_height="54dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Compartir"
-                android:textColor="@color/white"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/deleteButton"
-                android:layout_width="0dp"
-                android:layout_height="54dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Borrar ubicación"
-                android:textColor="@color/orange"
-                android:textSize="16sp" />
-        </LinearLayout>
-
+            android:textSize="16sp"
+            android:textStyle="bold" />
     </LinearLayout>
-</ScrollView>
+
+    <!-- Acciones secundarias discretas -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/shareButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/bg_ghost_button"
+            android:gravity="center"
+            android:text="Compartir"
+            android:textColor="@color/muted"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/deleteButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/bg_ghost_button"
+            android:gravity="center"
+            android:text="Borrar ubicación"
+            android:textColor="@color/danger"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+</LinearLayout>
