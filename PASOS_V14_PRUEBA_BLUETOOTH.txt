@@ -1,0 +1,46 @@
+MI COCHE v1.4 BETA — SUBIR Y PROBAR
+
+1. Sustituye en tu repositorio "car" los archivos por los de este ZIP.
+2. En .github/workflows deja únicamente build-apk.yml.
+3. Borra si siguen existiendo workflows viejos como:
+   - .github/workflows/build-car-apk-v06-FINAL.yml
+   - build-apk.yml en la RAÍZ del repositorio
+4. Haz Commit a main.
+5. GitHub Actions generará MiCoche-v1.4.apk.
+
+CONFIGURACIÓN EN EL TELÉFONO
+
+1. Instala v1.4 encima de la versión anterior.
+2. Abre Mi Coche > rueda dentada.
+3. Pulsa "Bluetooth de mi coche".
+4. Elige el Bluetooth del coche de la lista de dispositivos YA emparejados.
+5. Acepta la asociación que muestra Android.
+6. Pulsa "Permisos para guardado automático".
+7. En los permisos de Android selecciona:
+   Ubicación > Permitir siempre.
+8. Permite también notificaciones si Android las solicita.
+9. Vuelve a Mi Coche.
+10. En Ajustes debe indicar:
+    Activo · Bluetooth del coche
+    Ubicación automática: lista
+
+PRUEBA RÁPIDA
+
+Pulsa "Probar guardado automático".
+Esto sustituirá la posición guardada por tu posición actual y sirve para comprobar:
+- GPS
+- permisos
+- ficha
+- widget
+- notificación
+
+PRUEBA REAL
+
+1. Entra en el coche.
+2. Comprueba que el teléfono conecta al Bluetooth del coche.
+3. Aparca y apaga el coche.
+4. Cuando se desconecte Bluetooth, Mi Coche debería guardar automáticamente la posición.
+
+TRACKER BLUETOOTH
+
+Aparece ya en el menú, pero todavía está desactivado y sin programar.

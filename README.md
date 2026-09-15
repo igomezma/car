@@ -1,22 +1,44 @@
-# Mi Coche v1.3
+# Mi Coche v1.4 beta — Aparcamiento automático por Bluetooth
 
-Aplicación Android para guardar la ubicación del coche, verla en el mapa, navegar hasta ella, compartirla y usar un widget en la pantalla de inicio.
+Esta versión conserva la app v1.3 y añade una primera prueba de aparcamiento automático.
 
-## Cambios principales de v1.3
+## Qué hace
 
-- Pantalla principal completamente fija: **sin ScrollView y sin desplazamiento vertical**.
-- Respeta la barra superior del sistema (hora, batería, Wi‑Fi, etc.).
-- El mapa usa `layout_weight=1` y se adapta al espacio libre del teléfono.
-- Interfaz más minimalista y compacta.
-- Nuevo icono naranja/charcoal usado también en la cabecera y el widget.
-- Botones principales en una sola fila para ahorrar altura.
-- Widget conservado y actualizado visualmente.
+1. En **Ajustes > Bluetooth de mi coche**, muestra los dispositivos Bluetooth que ya están emparejados en el teléfono.
+2. Seleccionas el Bluetooth del coche.
+3. Android lo asocia como dispositivo compañero de Mi Coche.
+4. Cuando Android detecta que ese Bluetooth se ha conectado, Mi Coche queda "armado".
+5. Cuando después se desconecta, intenta guardar automáticamente la ubicación del teléfono.
+6. Actualiza la ficha y el widget, y muestra una notificación si están permitidas.
 
-## Compilar con GitHub Actions
+## Tracker Bluetooth
 
-Sube todo el contenido de este proyecto al repositorio `car` en la rama `main`.
-El workflow `.github/workflows/build-apk.yml` compila automáticamente y crea el artefacto `MiCoche-v1.2-APK`.
+La opción aparece en Ajustes como **Tracker Bluetooth · Próximamente**, pero todavía no tiene lógica programada, tal como se pidió para esta prueba.
 
+## Permiso importante
 
-### Corrección del widget v1.3
-Se ha rehecho el layout del widget usando únicamente vistas compatibles con RemoteViews y se ha reforzado el manejo de los PendingIntent.
+Para guardar la posición cuando la aplicación está cerrada, en Android moderno debes ir a:
+
+**Ajustes del teléfono > Apps > Mi Coche > Permisos > Ubicación > Permitir siempre**
+
+La aplicación incluye un botón que te lleva a los permisos.
+
+## Primera prueba recomendada
+
+- Empareja normalmente el teléfono con el Bluetooth del coche.
+- Abre Mi Coche > Ajustes > Bluetooth de mi coche.
+- Elige tu coche y acepta la asociación.
+- Activa **Permitir siempre** para ubicación.
+- Permite notificaciones.
+- Pulsa **Probar guardado automático** para verificar GPS/permisos.
+- Luego haz la prueba real:
+  - entra al coche y deja que el Bluetooth se conecte;
+  - conduce/aparca;
+  - apaga el coche;
+  - al desconectarse el Bluetooth debería guardarse la posición.
+
+## Seguridad contra falsos guardados
+
+La app no guarda automáticamente por una simple ausencia del Bluetooth recién configurado. Primero tiene que haber detectado una conexión real del dispositivo y después una desconexión.
+
+También evita repetir guardados automáticos durante 90 segundos.

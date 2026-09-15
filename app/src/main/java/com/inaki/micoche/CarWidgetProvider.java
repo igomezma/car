@@ -68,7 +68,7 @@ public class CarWidgetProvider extends AppWidgetProvider {
                         CarStorage.lon(context));
             }
 
-            views.setTextViewText(R.id.widgetStatus, "Coche guardado");
+            views.setTextViewText(R.id.widgetStatus, CarStorage.SOURCE_AUTO.equals(CarStorage.source(context)) ? "Coche guardado · automático" : "Coche guardado");
             views.setTextViewText(R.id.widgetAddress, address);
             views.setFloat(R.id.widgetNavigate, "setAlpha", 1f);
 

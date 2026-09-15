@@ -10,6 +10,10 @@ public final class CarStorage {
     private static final String ADDRESS = "address";
     private static final String TIME = "time";
     private static final String HAS = "has";
+    private static final String SOURCE = "source";
+
+    public static final String SOURCE_MANUAL = "manual";
+    public static final String SOURCE_AUTO = "auto";
 
     private CarStorage() {}
 
@@ -22,12 +26,17 @@ public final class CarStorage {
     }
 
     public static void save(Context context, double lat, double lon, String address, long time) {
+        save(context, lat, lon, address, time, SOURCE_MANUAL);
+    }
+
+    public static void save(Context context, double lat, double lon, String address, long time, String source) {
         prefs(context).edit()
                 .putBoolean(HAS, true)
                 .putLong(LAT, Double.doubleToRawLongBits(lat))
                 .putLong(LON, Double.doubleToRawLongBits(lon))
                 .putString(ADDRESS, address == null ? "" : address)
                 .putLong(TIME, time)
+                .putString(SOURCE, source == null ? SOURCE_MANUAL : source)
                 .apply();
     }
 
@@ -49,5 +58,9 @@ public final class CarStorage {
 
     public static long time(Context context) {
         return prefs(context).getLong(TIME, 0L);
+    }
+
+    public static String source(Context context) {
+        return prefs(context).getString(SOURCE, SOURCE_MANUAL);
     }
 }

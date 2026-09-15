@@ -1,10 +1,14 @@
 .github/workflows/build-apk.yml
 BORRAR_ARCHIVOS_ANTIGUOS.txt
 PASOS_DESDE_EL_MOVIL.txt
+PASOS_V14_PRUEBA_BLUETOOTH.txt
 README.md
 WIDGET_REVISADO.txt
 app/build.gradle
 app/src/main/AndroidManifest.xml
+app/src/main/java/com/inaki/micoche/AutoParkingCompanionService.java
+app/src/main/java/com/inaki/micoche/AutoParkingManager.java
+app/src/main/java/com/inaki/micoche/AutoParkingPrefs.java
 app/src/main/java/com/inaki/micoche/CarStorage.java
 app/src/main/java/com/inaki/micoche/CarWidgetProvider.java
 app/src/main/java/com/inaki/micoche/MainActivity.java
@@ -19,6 +23,7 @@ app/src/main/res/drawable/ic_car_top.xml
 app/src/main/res/drawable/ic_settings.xml
 app/src/main/res/drawable-nodpi/app_icon.png
 app/src/main/res/layout/activity_main.xml
+app/src/main/res/layout/dialog_settings.xml
 app/src/main/res/layout/widget_car.xml
 app/src/main/res/values/colors.xml
 app/src/main/res/values/strings.xml
