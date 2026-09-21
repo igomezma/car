@@ -1,0 +1,30 @@
+WHERE'S MY CAR? v1.5 — GOOGLE PLAY
+
+Archivos generados por GitHub Actions:
+- WheresMyCar-v1.5.apk: instalación y pruebas en el móvil.
+- WheresMyCar-v1.5-PlayStore.aab: subida a Google Play Console.
+
+Configuración técnica:
+- applicationId: com.inaki.micoche
+- versionCode: 6
+- versionName: 1.5
+- compileSdk / targetSdk: API 36 (Android 16)
+- minSdk: API 26
+
+La clave privada nunca debe subirse como archivo público al repositorio.
+Guardar en GitHub > Settings > Secrets and variables > Actions:
+- UPLOAD_KEYSTORE_BASE64
+- UPLOAD_STORE_PASSWORD
+- UPLOAD_KEY_ALIAS
+- UPLOAD_KEY_PASSWORD
+
+Google Play también solicitará:
+- Icono de 512 x 512 px.
+- Gráfico de funciones de 1024 x 500 px.
+- Capturas de pantalla.
+- Descripción corta y completa.
+- URL pública de política de privacidad.
+- Formulario de Seguridad de los datos.
+- Declaración y justificación de ubicación en segundo plano.
+
+IMPORTANTE: conservar para siempre la clave de subida y sus contraseñas.
