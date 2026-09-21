@@ -1,0 +1,43 @@
+name: Build Wheres My Car v1.5
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build APK
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk WheresMyCar-v1.5.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: WheresMyCar-v1.5-APK
+          path: WheresMyCar-v1.5.apk
+          if-no-files-found: error
+          retention-days: 30
