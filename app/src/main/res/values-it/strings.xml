@@ -1,5 +1,46 @@
 <resources>
-<string name="app_name">Dov’è la mia auto?</string><string name="tagline">La tua auto, sempre localizzata</string><string name="settings">Impostazioni</string><string name="saved_car">Auto salvata</string><string name="car_saved">Auto salvata</string><string name="location_saved">Posizione salvata</string><string name="no_location">Nessuna posizione salvata</string><string name="map_go">Tocca la mappa per raggiungere l’auto</string><string name="save_here">Salva qui</string><string name="go_to_car">Vai all’auto</string><string name="share">Condividi</string><string name="delete_location">Elimina posizione</string><string name="widget_save">Salva</string><string name="widget_empty">Apri l’app per salvare la posizione dell’auto</string><string name="auto_parking">Parcheggio automatico</string><string name="disabled">Disattivato</string><string name="bt_not_configured">Bluetooth auto: non configurato</string><string name="auto_location_pending">Posizione automatica: in attesa</string><string name="no_events">Nessun evento</string><string name="configure_bt">Configura Bluetooth auto</string><string name="auto_permissions">Permessi salvataggio automatico</string><string name="test_auto">Prova salvataggio automatico</string><string name="disable_auto">Disattiva parcheggio automatico</string><string name="v15_note">v1.5 · Il parcheggio automatico usa solo la radio/Bluetooth dell’auto.</string><string name="widget_saved_auto">Auto salvata · automatico</string><string name="widget_saved">Auto salvata</string><string name="widget_no_location">Nessuna posizione</string><string name="widget_empty_help">Tocca Salva per registrare la posizione</string><string name="save_first">Salva prima la posizione dell’auto</string><string name="auto_channel">Parcheggio automatico</string><string name="auto_channel_desc">Avvisi quando la posizione viene salvata automaticamente.</string>
-<string name="customize_car">Personalizza la tua auto</string><string name="car_preview">Anteprima auto</string><string name="car_model">Tipo di auto</string><string name="car_color">Colore</string><string name="v16_note">v1.6 · Modelli generici originali. Il parcheggio automatico usa solo il Bluetooth dell’auto.</string>
-<string-array name="car_models"><item>City car</item><item>Berlina</item><item>SUV</item><item>Sportiva</item><item>Fuoristrada</item><item>Furgone</item></string-array><string-array name="car_colors"><item>Arancione</item><item>Rosso</item><item>Blu</item><item>Nero</item><item>Bianco</item><item>Argento</item><item>Verde</item><item>Giallo</item></string-array>
+<string name="app_name">Where Is My Car</string>
+<string name="short_app_name">My Car?</string>
+<string name="tagline">Parcheggia meglio · Trovala facilmente · v1.7</string>
+<string name="settings">Impostazioni</string>
+<string name="saved_car">Auto salvata</string>
+<string name="car_saved">Auto salvata</string>
+<string name="location_saved">Posizione salvata</string>
+<string name="no_location">Nessuna posizione salvata</string>
+<string name="map_go">Tocca la mappa per raggiungere l’auto</string>
+<string name="save_here">Salva qui</string>
+<string name="go_to_car">Vai all’auto</string>
+<string name="share">Condividi</string>
+<string name="delete_location">Elimina posizione</string>
+<string name="widget_save">Salva</string>
+<string name="widget_empty">Apri l’app per salvare la posizione dell’auto</string>
+<string name="auto_parking">Parcheggio automatico</string>
+<string name="disabled">Disattivato</string>
+<string name="bt_not_configured">Bluetooth auto: non configurato</string>
+<string name="auto_location_pending">Posizione automatica: in attesa</string>
+<string name="no_events">Nessun evento</string>
+<string name="configure_bt">Configura Bluetooth auto</string>
+<string name="auto_permissions">Permessi salvataggio automatico</string>
+<string name="test_auto">Prova salvataggio automatico</string>
+<string name="disable_auto">Disattiva parcheggio automatico</string>
+<string name="v15_note">v1.5 · Il parcheggio automatico usa solo la radio/Bluetooth dell’auto.</string>
+<string name="widget_saved_auto">Auto salvata · automatico</string>
+<string name="widget_saved">Auto salvata</string>
+<string name="widget_no_location">Nessuna posizione</string>
+<string name="widget_empty_help">Tocca Salva per registrare la posizione</string>
+<string name="save_first">Salva prima la posizione dell’auto</string>
+<string name="auto_channel">Parcheggio automatico</string>
+<string name="auto_channel_desc">Avvisi quando la posizione viene salvata automaticamente.</string>
+
+<string name="customize_car">Personalizza la tua auto</string>
+<string name="customize_car_v17">Personalizza la tua auto · v1.7</string>
+<string name="car_preview">Anteprima auto</string>
+<string name="car_model">Tipo di auto</string>
+<string name="car_color">Colore</string>
+<string name="v16_note">v1.6 · Modelli generici originali. Il parcheggio automatico usa solo il Bluetooth dell’auto.</string>
+<string name="v17_note">v1.7 · Sei tipi originali e otto colori. Parcheggio automatico solo tramite Bluetooth.</string>
+
+<string-array name="car_models"><item>City car</item><item>Berlina</item><item>SUV</item><item>Sportiva</item><item>Fuoristrada</item><item>Furgone</item></string-array>
+<string-array name="car_colors"><item>Arancione</item><item>Rosso</item><item>Blu</item><item>Nero</item><item>Bianco</item><item>Argento</item><item>Verde</item><item>Giallo</item></string-array>
+
 </resources>

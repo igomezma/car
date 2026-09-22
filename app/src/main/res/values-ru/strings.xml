@@ -1,5 +1,46 @@
 <resources>
-<string name="app_name">Где моя машина?</string><string name="tagline">Ваш автомобиль всегда найден</string><string name="settings">Настройки</string><string name="saved_car">Машина сохранена</string><string name="car_saved">Машина сохранена</string><string name="location_saved">Местоположение сохранено</string><string name="no_location">Нет сохранённого местоположения</string><string name="map_go">Нажмите карту, чтобы идти к машине</string><string name="save_here">Сохранить здесь</string><string name="go_to_car">К машине</string><string name="share">Поделиться</string><string name="delete_location">Удалить местоположение</string><string name="widget_save">Сохранить</string><string name="widget_empty">Откройте приложение, чтобы сохранить машину</string><string name="auto_parking">Автоматическая парковка</string><string name="disabled">Выключено</string><string name="bt_not_configured">Bluetooth машины: не настроен</string><string name="auto_location_pending">Автогеолокация: ожидание</string><string name="no_events">Событий пока нет</string><string name="configure_bt">Настроить Bluetooth машины</string><string name="auto_permissions">Разрешения автосохранения</string><string name="test_auto">Проверить автосохранение</string><string name="disable_auto">Отключить автопарковку</string><string name="v15_note">v1.5 · Автопарковка использует только радио/Bluetooth машины.</string><string name="widget_saved_auto">Машина сохранена · автоматически</string><string name="widget_saved">Машина сохранена</string><string name="widget_no_location">Нет местоположения</string><string name="widget_empty_help">Нажмите «Сохранить», чтобы запомнить машину</string><string name="save_first">Сначала сохраните местоположение</string><string name="auto_channel">Автоматическая парковка</string><string name="auto_channel_desc">Уведомления об автоматическом сохранении местоположения.</string>
-<string name="customize_car">Настройте автомобиль</string><string name="car_preview">Предпросмотр автомобиля</string><string name="car_model">Тип автомобиля</string><string name="car_color">Цвет</string><string name="v16_note">v1.6 · Оригинальные типовые модели. Автопарковка использует только Bluetooth автомобиля.</string>
-<string-array name="car_models"><item>Городской</item><item>Седан</item><item>Внедорожник</item><item>Спортивный</item><item>Вездеход</item><item>Фургон</item></string-array><string-array name="car_colors"><item>Оранжевый</item><item>Красный</item><item>Синий</item><item>Чёрный</item><item>Белый</item><item>Серебристый</item><item>Зелёный</item><item>Жёлтый</item></string-array>
+<string name="app_name">Where Is My Car</string>
+<string name="short_app_name">My Car?</string>
+<string name="tagline">Паркуйтесь умнее · Находите проще · v1.7</string>
+<string name="settings">Настройки</string>
+<string name="saved_car">Машина сохранена</string>
+<string name="car_saved">Машина сохранена</string>
+<string name="location_saved">Местоположение сохранено</string>
+<string name="no_location">Нет сохранённого местоположения</string>
+<string name="map_go">Нажмите карту, чтобы идти к машине</string>
+<string name="save_here">Сохранить здесь</string>
+<string name="go_to_car">К машине</string>
+<string name="share">Поделиться</string>
+<string name="delete_location">Удалить местоположение</string>
+<string name="widget_save">Сохранить</string>
+<string name="widget_empty">Откройте приложение, чтобы сохранить машину</string>
+<string name="auto_parking">Автоматическая парковка</string>
+<string name="disabled">Выключено</string>
+<string name="bt_not_configured">Bluetooth машины: не настроен</string>
+<string name="auto_location_pending">Автогеолокация: ожидание</string>
+<string name="no_events">Событий пока нет</string>
+<string name="configure_bt">Настроить Bluetooth машины</string>
+<string name="auto_permissions">Разрешения автосохранения</string>
+<string name="test_auto">Проверить автосохранение</string>
+<string name="disable_auto">Отключить автопарковку</string>
+<string name="v15_note">v1.5 · Автопарковка использует только радио/Bluetooth машины.</string>
+<string name="widget_saved_auto">Машина сохранена · автоматически</string>
+<string name="widget_saved">Машина сохранена</string>
+<string name="widget_no_location">Нет местоположения</string>
+<string name="widget_empty_help">Нажмите «Сохранить», чтобы запомнить машину</string>
+<string name="save_first">Сначала сохраните местоположение</string>
+<string name="auto_channel">Автоматическая парковка</string>
+<string name="auto_channel_desc">Уведомления об автоматическом сохранении местоположения.</string>
+
+<string name="customize_car">Настройте автомобиль</string>
+<string name="customize_car_v17">Настройте автомобиль · v1.7</string>
+<string name="car_preview">Предпросмотр автомобиля</string>
+<string name="car_model">Тип автомобиля</string>
+<string name="car_color">Цвет</string>
+<string name="v16_note">v1.6 · Оригинальные типовые модели. Автопарковка использует только Bluetooth автомобиля.</string>
+<string name="v17_note">v1.7 · Шесть оригинальных типов и восемь цветов. Автопарковка только через Bluetooth.</string>
+
+<string-array name="car_models"><item>Городской</item><item>Седан</item><item>Внедорожник</item><item>Спортивный</item><item>Вездеход</item><item>Фургон</item></string-array>
+<string-array name="car_colors"><item>Оранжевый</item><item>Красный</item><item>Синий</item><item>Чёрный</item><item>Белый</item><item>Серебристый</item><item>Зелёный</item><item>Жёлтый</item></string-array>
+
 </resources>
