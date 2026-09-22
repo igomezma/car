@@ -306,12 +306,12 @@ public class MainActivity extends Activity {
         color.setAdapter(colorAdapter);
         model.setSelection(CarAppearance.model(this));
         color.setSelection(CarAppearance.color(this));
-        preview.setImageBitmap(CarAppearance.render(this, dp(108), dp(150)));
+        preview.setImageBitmap(CarAppearance.render(this, dp(105), dp(132)));
 
         AdapterView.OnItemSelectedListener listener = new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> parent, View item, int position, long id) {
                 CarAppearance.save(MainActivity.this, model.getSelectedItemPosition(), color.getSelectedItemPosition());
-                preview.setImageBitmap(CarAppearance.render(MainActivity.this, dp(108), dp(150)));
+                preview.setImageBitmap(CarAppearance.render(MainActivity.this, dp(105), dp(132)));
                 applyCarAppearance();
             }
             @Override public void onNothingSelected(AdapterView<?> parent) { }

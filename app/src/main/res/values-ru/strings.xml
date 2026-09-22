@@ -1,7 +1,7 @@
 <resources>
 <string name="app_name">Where Is My Car</string>
 <string name="short_app_name">My Car?</string>
-<string name="tagline">Паркуйтесь умнее · Находите проще · v1.7</string>
+<string name="tagline">Паркуйтесь умнее · Находите проще · v1.8</string>
 <string name="settings">Настройки</string>
 <string name="saved_car">Машина сохранена</string>
 <string name="car_saved">Машина сохранена</string>
@@ -34,13 +34,16 @@
 
 <string name="customize_car">Настройте автомобиль</string>
 <string name="customize_car_v17">Настройте автомобиль · v1.7</string>
+<string name="customize_car_v18">Настройте автомобиль · v1.8</string>
 <string name="car_preview">Предпросмотр автомобиля</string>
 <string name="car_model">Тип автомобиля</string>
 <string name="car_color">Цвет</string>
 <string name="v16_note">v1.6 · Оригинальные типовые модели. Автопарковка использует только Bluetooth автомобиля.</string>
 <string name="v17_note">v1.7 · Шесть оригинальных типов и восемь цветов. Автопарковка только через Bluetooth.</string>
+<string name="v18_note">v1.8 · Реалистичные автомобили без марок · Автопарковка Bluetooth</string>
+<string name="configure_bt_short">Bluetooth авто</string><string name="auto_permissions_short">Разрешения</string><string name="test_auto_short">Проверить</string><string name="disable_auto_short">Отключить</string>
 
 <string-array name="car_models"><item>Городской</item><item>Седан</item><item>Внедорожник</item><item>Спортивный</item><item>Вездеход</item><item>Фургон</item></string-array>
-<string-array name="car_colors"><item>Оранжевый</item><item>Красный</item><item>Синий</item><item>Чёрный</item><item>Белый</item><item>Серебристый</item><item>Зелёный</item><item>Жёлтый</item></string-array>
+<string-array name="car_colors"><item>Оранжевый</item><item>Красный</item><item>Синий</item><item>Чёрный</item><item>Белый</item><item>Зелёный</item><item>Жёлтый</item></string-array>
 
 </resources>

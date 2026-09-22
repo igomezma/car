@@ -1,7 +1,7 @@
 <resources>
 <string name="app_name">Where Is My Car</string>
 <string name="short_app_name">My Car?</string>
-<string name="tagline">Mieux se garer · Trouver facilement · v1.7</string>
+<string name="tagline">Mieux se garer · Trouver facilement · v1.8</string>
 <string name="settings">Paramètres</string>
 <string name="saved_car">Voiture enregistrée</string>
 <string name="car_saved">Voiture enregistrée</string>
@@ -34,13 +34,16 @@
 
 <string name="customize_car">Personnalisez votre voiture</string>
 <string name="customize_car_v17">Personnalisez votre voiture · v1.7</string>
+<string name="customize_car_v18">Personnalisez votre voiture · v1.8</string>
 <string name="car_preview">Aperçu de la voiture</string>
 <string name="car_model">Type de voiture</string>
 <string name="car_color">Couleur</string>
 <string name="v16_note">v1.6 · Modèles génériques originaux. Le stationnement automatique utilise uniquement le Bluetooth de la voiture.</string>
 <string name="v17_note">v1.7 · Six types originaux et huit couleurs. Stationnement automatique uniquement via Bluetooth.</string>
+<string name="v18_note">v1.8 · Voitures réalistes sans marque · Stationnement automatique Bluetooth</string>
+<string name="configure_bt_short">Bluetooth voiture</string><string name="auto_permissions_short">Autorisations</string><string name="test_auto_short">Tester</string><string name="disable_auto_short">Désactiver</string>
 
 <string-array name="car_models"><item>Urbaine</item><item>Berline</item><item>SUV</item><item>Sportive</item><item>Tout-terrain</item><item>Fourgon</item></string-array>
-<string-array name="car_colors"><item>Orange</item><item>Rouge</item><item>Bleu</item><item>Noir</item><item>Blanc</item><item>Argent</item><item>Vert</item><item>Jaune</item></string-array>
+<string-array name="car_colors"><item>Orange</item><item>Rouge</item><item>Bleu</item><item>Noir</item><item>Blanc</item><item>Vert</item><item>Jaune</item></string-array>
 
 </resources>

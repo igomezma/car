@@ -1,7 +1,7 @@
 <resources>
 <string name="app_name">Where Is My Car</string>
 <string name="short_app_name">My Car?</string>
-<string name="tagline">Parkirajte pametnije · Nađite lakše · v1.7</string>
+<string name="tagline">Parkirajte pametnije · Nađite lakše · v1.8</string>
 <string name="settings">Postavke</string>
 <string name="saved_car">Auto sačuvan</string>
 <string name="car_saved">Auto sačuvan</string>
@@ -34,13 +34,16 @@
 
 <string name="customize_car">Prilagodite svoj auto</string>
 <string name="customize_car_v17">Prilagodite svoj auto · v1.7</string>
+<string name="customize_car_v18">Prilagodite svoj auto · v1.8</string>
 <string name="car_preview">Pregled auta</string>
 <string name="car_model">Tip auta</string>
 <string name="car_color">Boja</string>
 <string name="v16_note">v1.6 · Originalni generički dizajni. Automatsko parkiranje koristi samo Bluetooth auta.</string>
 <string name="v17_note">v1.7 · Šest originalnih tipova i osam boja. Automatsko parkiranje samo preko Bluetootha.</string>
+<string name="v18_note">v1.8 · Realistični automobili bez marki · Automatsko Bluetooth parkiranje</string>
+<string name="configure_bt_short">Bluetooth auta</string><string name="auto_permissions_short">Dozvole</string><string name="test_auto_short">Testiraj</string><string name="disable_auto_short">Isključi</string>
 
 <string-array name="car_models"><item>Gradski</item><item>Limuzina</item><item>SUV</item><item>Sportski</item><item>Terenski</item><item>Kombi</item></string-array>
-<string-array name="car_colors"><item>Narandžasta</item><item>Crvena</item><item>Plava</item><item>Crna</item><item>Bijela</item><item>Srebrna</item><item>Zelena</item><item>Žuta</item></string-array>
+<string-array name="car_colors"><item>Narandžasta</item><item>Crvena</item><item>Plava</item><item>Crna</item><item>Bijela</item><item>Zelena</item><item>Žuta</item></string-array>
 
 </resources>

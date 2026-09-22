@@ -1,7 +1,7 @@
 <resources>
 <string name="app_name">Where Is My Car</string>
 <string name="short_app_name">My Car?</string>
-<string name="tagline">智能停车 · 轻松寻车 · v1.7</string>
+<string name="tagline">智能停车 · 轻松寻车 · v1.8</string>
 <string name="settings">设置</string>
 <string name="saved_car">车辆已保存</string>
 <string name="car_saved">车辆已保存</string>
@@ -34,13 +34,16 @@
 
 <string name="customize_car">自定义您的车辆</string>
 <string name="customize_car_v17">自定义车辆 · v1.7</string>
+<string name="customize_car_v18">自定义车辆 · v1.8</string>
 <string name="car_preview">车辆预览</string>
 <string name="car_model">车辆类型</string>
 <string name="car_color">颜色</string>
 <string name="v16_note">v1.6 · 原创通用车型设计。自动停车定位仅使用车辆蓝牙。</string>
 <string name="v17_note">v1.7 · 六种原创车型与八种颜色。自动停车定位仅使用车辆蓝牙。</string>
+<string name="v18_note">v1.8 · 无品牌逼真车型 · 蓝牙自动停车定位</string>
+<string name="configure_bt_short">车辆蓝牙</string><string name="auto_permissions_short">权限</string><string name="test_auto_short">测试</string><string name="disable_auto_short">关闭</string>
 
 <string-array name="car_models"><item>城市车</item><item>轿车</item><item>SUV</item><item>跑车</item><item>越野车</item><item>厢式车</item></string-array>
-<string-array name="car_colors"><item>橙色</item><item>红色</item><item>蓝色</item><item>黑色</item><item>白色</item><item>银色</item><item>绿色</item><item>黄色</item></string-array>
+<string-array name="car_colors"><item>橙色</item><item>红色</item><item>蓝色</item><item>黑色</item><item>白色</item><item>绿色</item><item>黄色</item></string-array>
 
 </resources>

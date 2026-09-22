@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Where Is My Car</string>
     <string name="short_app_name">My Car?</string>
-    <string name="tagline">Park smarter · Find easier · v1.7</string>
+    <string name="tagline">Park smarter · Find easier · v1.8</string>
     <string name="settings">Settings</string>
     <string name="saved_car">Saved car</string>
     <string name="car_saved">Car saved</string>
@@ -32,6 +32,7 @@
     <string name="save_first">Save the car location first</string>
     <string name="auto_channel">Automatic parking</string>
     <string name="auto_channel_desc">Alerts when Where’s My Car? saves the position automatically.</string>
-    <string name="customize_car">Customize your car</string><string name="customize_car_v17">Customize your car · v1.7</string><string name="car_preview">Car preview</string><string name="car_model">Car type</string><string name="car_color">Color</string><string name="v16_note">v1.6 · Original generic car designs. Automatic parking uses only the car Bluetooth.</string><string name="v17_note">v1.7 · Six original car types and eight colors. Automatic parking uses only the car Bluetooth.</string>
-    <string-array name="car_models"><item>Urban</item><item>Sedan</item><item>SUV</item><item>Sport</item><item>Off-road</item><item>Van</item></string-array><string-array name="car_colors"><item>Orange</item><item>Red</item><item>Blue</item><item>Black</item><item>White</item><item>Silver</item><item>Green</item><item>Yellow</item></string-array>
+    <string name="customize_car">Customize your car</string><string name="customize_car_v17">Customize your car · v1.7</string><string name="customize_car_v18">Customize your car · v1.8</string><string name="car_preview">Car preview</string><string name="car_model">Car type</string><string name="car_color">Color</string><string name="v16_note">v1.6 · Original generic car designs. Automatic parking uses only the car Bluetooth.</string><string name="v17_note">v1.7 · Six original car types and eight colors. Automatic parking uses only the car Bluetooth.</string><string name="v18_note">v1.8 · Realistic brand-free cars · Bluetooth automatic parking</string>
+    <string name="configure_bt_short">Car Bluetooth</string><string name="auto_permissions_short">Permissions</string><string name="test_auto_short">Test saving</string><string name="disable_auto_short">Disable</string>
+    <string-array name="car_models"><item>Urban</item><item>Sedan</item><item>SUV</item><item>Sport</item><item>Off-road</item><item>Van</item></string-array><string-array name="car_colors"><item>Orange</item><item>Red</item><item>Blue</item><item>Black</item><item>White</item><item>Green</item><item>Yellow</item></string-array>
 </resources>
