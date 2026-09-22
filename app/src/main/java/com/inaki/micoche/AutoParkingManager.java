@@ -261,9 +261,9 @@ public final class AutoParkingManager {
                     (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Aparcamiento automático",
+                    context.getString(R.string.auto_channel),
                     NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setDescription("Avisos cuando Mi Coche guarda la posición automáticamente.");
+            channel.setDescription(context.getString(R.string.auto_channel_desc));
             manager.createNotificationChannel(channel);
         }
     }

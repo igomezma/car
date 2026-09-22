@@ -22,16 +22,21 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.graphics.drawable.ColorDrawable;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Spinner;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,6 +57,7 @@ public class MainActivity extends Activity {
     private View rootView;
     private WebView mapWeb;
     private ImageView mapCar;
+    private ImageView carCardIcon;
     private TextView mapTip;
     private TextView statusTitle;
     private TextView savedAgo;
@@ -65,6 +71,8 @@ public class MainActivity extends Activity {
     private boolean pendingManualSaveAfterLocationPermission = false;
     private boolean pendingAutoPermissionGuide = false;
     private View currentSettingsView;
+    private AlertDialog currentSettingsDialog;
+    private float settingsGestureStartX;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +102,7 @@ public class MainActivity extends Activity {
         rootView = findViewById(R.id.rootView);
         mapWeb = findViewById(R.id.mapWeb);
         mapCar = findViewById(R.id.mapCar);
+        carCardIcon = findViewById(R.id.carCardIcon);
         mapTip = findViewById(R.id.mapTip);
         statusTitle = findViewById(R.id.statusTitle);
         savedAgo = findViewById(R.id.savedAgo);
@@ -101,6 +110,7 @@ public class MainActivity extends Activity {
         addressText = findViewById(R.id.addressText);
         coordsText = findViewById(R.id.coordsText);
         navButton = findViewById(R.id.navButton);
+        applyCarAppearance();
     }
 
     private void configureSafeArea() {
@@ -228,6 +238,7 @@ public class MainActivity extends Activity {
         currentSettingsView = view;
 
         updateSettingsView(view);
+        configureCarAppearance(view);
 
         Button carBluetooth = view.findViewById(R.id.configureCarBluetoothButton);
         Button permissions = view.findViewById(R.id.autoPermissionsButton);
@@ -250,17 +261,68 @@ public class MainActivity extends Activity {
                     Toast.LENGTH_SHORT).show();
         });
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this, android.R.style.Theme_Material_NoActionBar)
                 .setView(view)
-                .setNegativeButton("Cerrar", null)
                 .create();
+        currentSettingsDialog = dialog;
 
-        dialog.setOnDismissListener(d -> currentSettingsView = null);
+        view.findViewById(R.id.settingsBackButton).setOnClickListener(v -> dialog.dismiss());
+        view.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                settingsGestureStartX = event.getX();
+            } else if (event.getAction() == MotionEvent.ACTION_UP
+                    && settingsGestureStartX < dp(36)
+                    && event.getX() - settingsGestureStartX > dp(90)) {
+                dialog.dismiss();
+            }
+            return false;
+        });
+
+        dialog.setOnDismissListener(d -> {
+            currentSettingsView = null;
+            currentSettingsDialog = null;
+        });
         dialog.show();
 
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(getColor(R.color.bg)));
+            dialog.getWindow().setLayout(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT);
         }
+    }
+
+    private void configureCarAppearance(View view) {
+        ImageView preview = view.findViewById(R.id.carPreview);
+        Spinner model = view.findViewById(R.id.carModelSpinner);
+        Spinner color = view.findViewById(R.id.carColorSpinner);
+        ArrayAdapter<String> modelAdapter = new ArrayAdapter<>(this,
+                R.layout.spinner_item, getResources().getStringArray(R.array.car_models));
+        ArrayAdapter<String> colorAdapter = new ArrayAdapter<>(this,
+                R.layout.spinner_item, getResources().getStringArray(R.array.car_colors));
+        modelAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        colorAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        model.setAdapter(modelAdapter);
+        color.setAdapter(colorAdapter);
+        model.setSelection(CarAppearance.model(this));
+        color.setSelection(CarAppearance.color(this));
+        preview.setImageBitmap(CarAppearance.render(this, dp(108), dp(150)));
+
+        AdapterView.OnItemSelectedListener listener = new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> parent, View item, int position, long id) {
+                CarAppearance.save(MainActivity.this, model.getSelectedItemPosition(), color.getSelectedItemPosition());
+                preview.setImageBitmap(CarAppearance.render(MainActivity.this, dp(108), dp(150)));
+                applyCarAppearance();
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
+        };
+        model.setOnItemSelectedListener(listener);
+        color.setOnItemSelectedListener(listener);
+    }
+
+    private void applyCarAppearance() {
+        if (mapCar != null) mapCar.setImageBitmap(CarAppearance.render(this, dp(84), dp(136)));
+        if (carCardIcon != null) carCardIcon.setImageBitmap(CarAppearance.render(this, dp(56), dp(92)));
     }
 
     private void updateSettingsView(View view) {

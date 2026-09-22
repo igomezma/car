@@ -4,13 +4,34 @@ plugins {
 
 android {
     namespace 'com.inaki.micoche'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.inaki.micoche"
         minSdk 26
-        targetSdk 35
-        versionCode 5
-        versionName "1.4"
+        targetSdk 36
+        versionCode 7
+        versionName "1.6"
+    }
+
+    signingConfigs {
+        release {
+            def keyPath = System.getenv("UPLOAD_KEYSTORE_PATH")
+            if (keyPath) {
+                storeFile file(keyPath)
+                storePassword System.getenv("UPLOAD_STORE_PASSWORD")
+                keyAlias System.getenv("UPLOAD_KEY_ALIAS")
+                keyPassword System.getenv("UPLOAD_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (System.getenv("UPLOAD_KEYSTORE_PATH")) {
+                signingConfig signingConfigs.release
+            }
+        }
     }
 }

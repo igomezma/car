@@ -68,15 +68,15 @@ public class CarWidgetProvider extends AppWidgetProvider {
                         CarStorage.lon(context));
             }
 
-            views.setTextViewText(R.id.widgetStatus, CarStorage.SOURCE_AUTO.equals(CarStorage.source(context)) ? "Coche guardado · automático" : "Coche guardado");
+            views.setTextViewText(R.id.widgetStatus, CarStorage.SOURCE_AUTO.equals(CarStorage.source(context)) ? context.getString(R.string.widget_saved_auto) : context.getString(R.string.widget_saved));
             views.setTextViewText(R.id.widgetAddress, address);
             views.setFloat(R.id.widgetNavigate, "setAlpha", 1f);
 
         } else {
-            views.setTextViewText(R.id.widgetStatus, "Sin ubicación guardada");
+            views.setTextViewText(R.id.widgetStatus, context.getString(R.string.widget_no_location));
             views.setTextViewText(
                     R.id.widgetAddress,
-                    "Pulsa Guardar para registrar dónde está el coche");
+                    context.getString(R.string.widget_empty_help));
             views.setFloat(R.id.widgetNavigate, "setAlpha", 0.45f);
         }
 
@@ -127,7 +127,7 @@ public class CarWidgetProvider extends AppWidgetProvider {
         if (!CarStorage.hasCar(context)) {
             Toast.makeText(
                     context,
-                    "Primero guarda la ubicación del coche",
+                    context.getString(R.string.save_first),
                     Toast.LENGTH_SHORT).show();
             return;
         }

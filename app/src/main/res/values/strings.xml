@@ -1,5 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Mi Coche</string>
-    <string name="tagline">Tu coche, siempre localizado</string>
+    <string name="app_name">Where’s My Car?</string>
+    <string name="tagline">Your car, always located</string>
+    <string name="settings">Settings</string>
+    <string name="saved_car">Saved car</string>
+    <string name="car_saved">Car saved</string>
+    <string name="location_saved">Location saved</string>
+    <string name="no_location">No saved location yet</string>
+    <string name="map_go">Tap the map to go to the car</string>
+    <string name="save_here">Save here</string>
+    <string name="go_to_car">Go to car</string>
+    <string name="share">Share</string>
+    <string name="delete_location">Delete location</string>
+    <string name="widget_save">Save</string>
+    <string name="widget_empty">Open the app to save where the car is</string>
+    <string name="auto_parking">Automatic parking</string>
+    <string name="disabled">Disabled</string>
+    <string name="bt_not_configured">Car Bluetooth: not configured</string>
+    <string name="auto_location_pending">Automatic location: pending</string>
+    <string name="no_events">No events yet</string>
+    <string name="configure_bt">Configure car Bluetooth</string>
+    <string name="auto_permissions">Automatic saving permissions</string>
+    <string name="test_auto">Test automatic saving</string>
+    <string name="disable_auto">Disable automatic parking</string>
+    <string name="v15_note">v1.5 · Automatic parking works only with your car radio/Bluetooth. Manual saving remains available.</string>
+    <string name="widget_saved_auto">Car saved · automatic</string>
+    <string name="widget_saved">Car saved</string>
+    <string name="widget_no_location">No saved location</string>
+    <string name="widget_empty_help">Tap Save to record where the car is</string>
+    <string name="save_first">Save the car location first</string>
+    <string name="auto_channel">Automatic parking</string>
+    <string name="auto_channel_desc">Alerts when Where’s My Car? saves the position automatically.</string>
+    <string name="customize_car">Customize your car</string><string name="car_preview">Car preview</string><string name="car_model">Car type</string><string name="car_color">Color</string><string name="v16_note">v1.6 · Original generic car designs. Automatic parking uses only the car Bluetooth.</string>
+    <string-array name="car_models"><item>Urban</item><item>Sedan</item><item>SUV</item><item>Sport</item><item>Off-road</item><item>Van</item></string-array><string-array name="car_colors"><item>Orange</item><item>Red</item><item>Blue</item><item>Black</item><item>White</item><item>Silver</item><item>Green</item><item>Yellow</item></string-array>
 </resources>

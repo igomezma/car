@@ -17,7 +17,7 @@
         <ImageView
             android:layout_width="46dp"
             android:layout_height="46dp"
-            android:contentDescription="Icono Mi Coche"
+            android:contentDescription="@string/app_name"
             android:scaleType="centerCrop"
             android:src="@drawable/app_icon" />
 
@@ -31,7 +31,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Mi Coche"
+                android:text="@string/app_name"
                 android:textColor="@color/white"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -50,7 +50,7 @@
             android:layout_width="44dp"
             android:layout_height="44dp"
             android:background="@drawable/bg_settings"
-            android:contentDescription="Ajustes"
+            android:contentDescription="@string/settings"
             android:padding="11dp"
             android:src="@drawable/ic_settings" />
     </LinearLayout>
@@ -74,7 +74,7 @@
             android:layout_width="42dp"
             android:layout_height="68dp"
             android:layout_gravity="center"
-            android:contentDescription="Coche guardado"
+            android:contentDescription="@string/saved_car"
             android:src="@drawable/ic_car_top" />
 
         <TextView
@@ -84,7 +84,7 @@
             android:layout_gravity="bottom|center_horizontal"
             android:layout_marginBottom="12dp"
             android:background="@drawable/bg_tip"
-            android:text="Toca el mapa para ir al coche"
+            android:text="@string/map_go"
             android:textColor="@color/white"
             android:textSize="12sp" />
     </FrameLayout>
@@ -109,9 +109,10 @@
             android:orientation="horizontal">
 
             <ImageView
+                android:id="@+id/carCardIcon"
                 android:layout_width="28dp"
                 android:layout_height="46dp"
-                android:contentDescription="Coche"
+                android:contentDescription="@string/saved_car"
                 android:src="@drawable/ic_car_top" />
 
             <LinearLayout
@@ -125,7 +126,7 @@
                     android:id="@+id/statusTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Coche guardado"
+                    android:text="@string/car_saved"
                     android:textColor="@color/orange"
                     android:textSize="17sp"
                     android:textStyle="bold" />
@@ -135,7 +136,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
-                    android:text="Ubicación guardada"
+                    android:text="@string/location_saved"
                     android:textColor="@color/muted"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -157,7 +158,7 @@
             android:layout_marginTop="4dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="Todavía no hay una ubicación guardada"
+            android:text="@string/no_location"
             android:textColor="@color/white"
             android:textSize="13sp" />
 
@@ -186,7 +187,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@drawable/bg_primary_button"
-            android:text="Guardar aquí"
+            android:text="@string/save_here"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="16sp"
@@ -202,7 +203,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@drawable/bg_outline_button"
-            android:text="Ir al coche"
+            android:text="@string/go_to_car"
             android:textAllCaps="false"
             android:textColor="@color/orange"
             android:textSize="16sp"
@@ -223,7 +224,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_ghost_button"
             android:gravity="center"
-            android:text="Compartir"
+            android:text="@string/share"
             android:textColor="@color/muted"
             android:textSize="13sp" />
 
@@ -234,7 +235,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_ghost_button"
             android:gravity="center"
-            android:text="Borrar ubicación"
+            android:text="@string/delete_location"
             android:textColor="@color/danger"
             android:textSize="13sp" />
     </LinearLayout>

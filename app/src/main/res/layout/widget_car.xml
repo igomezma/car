@@ -17,7 +17,7 @@
         <ImageView
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:contentDescription="Mi Coche"
+            android:contentDescription="@string/app_name"
             android:scaleType="centerCrop"
             android:src="@drawable/app_icon" />
 
@@ -31,7 +31,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Mi Coche"
+                android:text="@string/app_name"
                 android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -42,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="Sin ubicación guardada"
+                android:text="@string/widget_no_location"
                 android:textColor="@color/orange"
                 android:textSize="11sp" />
         </LinearLayout>
@@ -58,7 +58,7 @@
         android:maxLines="2"
         android:paddingTop="4dp"
         android:paddingBottom="4dp"
-        android:text="Abre la app para guardar dónde está el coche"
+        android:text="@string/widget_empty"
         android:textColor="@color/muted"
         android:textSize="12sp" />
 
@@ -74,7 +74,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_primary_button"
             android:gravity="center"
-            android:text="Guardar"
+            android:text="@string/widget_save"
             android:textColor="@color/white"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -87,7 +87,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_outline_button"
             android:gravity="center"
-            android:text="Ir al coche"
+            android:text="@string/go_to_car"
             android:textColor="@color/orange"
             android:textSize="12sp"
             android:textStyle="bold" />
