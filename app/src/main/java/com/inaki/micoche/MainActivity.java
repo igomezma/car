@@ -1,5 +1,6 @@
 package com.inaki.micoche;
 
+import android.animation.ValueAnimator;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -23,6 +24,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.graphics.drawable.ColorDrawable;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
@@ -73,6 +77,8 @@ public class MainActivity extends Activity {
     private View currentSettingsView;
     private AlertDialog currentSettingsDialog;
     private float settingsGestureStartX;
+    private ValueAnimator settingsHintAnimator;
+    private boolean initialMapLocationRequested;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,11 +116,27 @@ public class MainActivity extends Activity {
         addressText = findViewById(R.id.addressText);
         coordsText = findViewById(R.id.coordsText);
         navButton = findViewById(R.id.navButton);
+        configureHeaderTitle();
         applyCarAppearance();
     }
 
+    private void configureHeaderTitle() {
+        TextView titleView = findViewById(R.id.headerTitle);
+        String title = getString(R.string.app_name);
+        SpannableString styledTitle = new SpannableString(title);
+        int carStart = title.toLowerCase(Locale.ROOT).lastIndexOf("car");
+        if (carStart >= 0) {
+            styledTitle.setSpan(
+                    new ForegroundColorSpan(getColor(R.color.brand_orange)),
+                    carStart,
+                    carStart + 3,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        titleView.setText(styledTitle);
+    }
+
     private void configureSafeArea() {
-        final int side = dp(16);
+        final int side = dp(12);
         final int extraTop = dp(6);
         final int extraBottom = dp(6);
 
@@ -165,7 +187,48 @@ public class MainActivity extends Activity {
         findViewById(R.id.deleteButton).setOnClickListener(v -> deleteCar());
 
         ImageButton settingsButton = findViewById(R.id.settingsButton);
-        settingsButton.setOnClickListener(v -> showSettings());
+        TextView settingsHintLabel = findViewById(R.id.settingsHintLabel);
+        boolean settingsSeen = getSharedPreferences("ui_onboarding", MODE_PRIVATE)
+                .getBoolean("settings_seen", false);
+        if (!settingsSeen) {
+            startSettingsHint(settingsButton, settingsHintLabel);
+        } else {
+            settingsHintLabel.setVisibility(View.GONE);
+        }
+        settingsButton.setOnClickListener(v -> {
+            getSharedPreferences("ui_onboarding", MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("settings_seen", true)
+                    .apply();
+            stopSettingsHint(settingsButton, settingsHintLabel);
+            showSettings();
+        });
+    }
+
+    private void startSettingsHint(ImageButton button, TextView label) {
+        label.setVisibility(View.VISIBLE);
+        settingsHintAnimator = ValueAnimator.ofArgb(
+                getColor(R.color.white),
+                getColor(R.color.brand_orange));
+        settingsHintAnimator.setDuration(1200L);
+        settingsHintAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        settingsHintAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        settingsHintAnimator.addUpdateListener(animation -> {
+            int color = (Integer) animation.getAnimatedValue();
+            button.setColorFilter(color);
+            label.setTextColor(color);
+            label.setAlpha(0.25f + (0.75f * animation.getAnimatedFraction()));
+        });
+        settingsHintAnimator.start();
+    }
+
+    private void stopSettingsHint(ImageButton button, TextView label) {
+        if (settingsHintAnimator != null) {
+            settingsHintAnimator.cancel();
+            settingsHintAnimator = null;
+        }
+        button.clearColorFilter();
+        label.setVisibility(View.GONE);
     }
 
     private void refreshUi() {
@@ -185,7 +248,7 @@ public class MainActivity extends Activity {
             distanceText.setText("—");
             addressText.setText("Todavía no hay una ubicación guardada");
             coordsText.setText("");
-            loadMap(42.0613, -1.6045, false);
+            loadMap(40.3500, -3.7000, false);
             return;
         }
 
@@ -237,6 +300,8 @@ public class MainActivity extends Activity {
         View view = getLayoutInflater().inflate(R.layout.dialog_settings, null);
         currentSettingsView = view;
 
+        configureSettingsSafeArea(view);
+
         updateSettingsView(view);
         configureCarAppearance(view);
 
@@ -286,10 +351,26 @@ public class MainActivity extends Activity {
 
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(getColor(R.color.bg)));
+            dialog.getWindow().setStatusBarColor(getColor(R.color.bg));
+            dialog.getWindow().setNavigationBarColor(getColor(R.color.bg));
             dialog.getWindow().setLayout(
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.MATCH_PARENT);
         }
+        view.requestApplyInsets();
+    }
+
+    private void configureSettingsSafeArea(View view) {
+        final int horizontal = dp(18);
+        final int contentTop = dp(10);
+        final int contentBottom = dp(10);
+        view.setOnApplyWindowInsetsListener((v, insets) -> {
+            v.setPadding(horizontal,
+                    contentTop + insets.getSystemWindowInsetTop(),
+                    horizontal,
+                    contentBottom + insets.getSystemWindowInsetBottom());
+            return insets;
+        });
     }
 
     private void configureCarAppearance(View view) {
@@ -880,7 +961,12 @@ public class MainActivity extends Activity {
     }
 
     private void refreshDistanceFromLastKnown() {
-        if (!CarStorage.hasCar(this) || !hasLocationPermission()) return;
+        if (!hasLocationPermission()) return;
+
+        if (!CarStorage.hasCar(this)) {
+            centerInitialMapOnPhone();
+            return;
+        }
 
         try {
             Location best = null;
@@ -899,6 +985,45 @@ public class MainActivity extends Activity {
 
             if (best != null) updateDistance(best);
 
+        } catch (SecurityException ignored) {}
+    }
+
+    private void centerInitialMapOnPhone() {
+        if (initialMapLocationRequested || locationManager == null) return;
+
+        try {
+            Location best = null;
+
+            for (String provider : locationManager.getProviders(true)) {
+                Location candidate = locationManager.getLastKnownLocation(provider);
+
+                if (candidate != null
+                        && (best == null
+                        || candidate.getTime() > best.getTime()
+                        || (candidate.hasAccuracy()
+                        && (!best.hasAccuracy()
+                        || candidate.getAccuracy() < best.getAccuracy())))) {
+                    best = candidate;
+                }
+            }
+
+            if (best != null) {
+                loadMap(best.getLatitude(), best.getLongitude(), false);
+            }
+
+            if (!isAnyProviderEnabled()) return;
+
+            initialMapLocationRequested = true;
+            requestFreshLocation(location -> {
+                if (location == null) {
+                    initialMapLocationRequested = false;
+                    return;
+                }
+
+                if (!CarStorage.hasCar(MainActivity.this)) {
+                    loadMap(location.getLatitude(), location.getLongitude(), false);
+                }
+            });
         } catch (SecurityException ignored) {}
     }
 
@@ -1227,11 +1352,11 @@ public class MainActivity extends Activity {
 
         AutoParkingManager.ensureObservation(this);
 
+        refreshUi();
+
         if (locationManager != null) {
             refreshDistanceFromLastKnown();
         }
-
-        refreshUi();
 
         if (currentSettingsView != null) {
             updateSettingsView(currentSettingsView);
@@ -1240,6 +1365,11 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (settingsHintAnimator != null) {
+            settingsHintAnimator.cancel();
+            settingsHintAnimator = null;
+        }
+
         if (mapWeb != null) {
             mapWeb.stopLoading();
             mapWeb.destroy();
