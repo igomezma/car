@@ -268,7 +268,7 @@ jobs:
           from pathlib import Path
           import base64
           p=Path("app/build.gradle"); s=p.read_text()
-          s=s.replace("versionCode 23","versionCode 25").replace('versionName "1.9.13"','versionName "1.9.15")
+          s=s.replace("versionCode 23","versionCode 25").replace('versionName "1.9.13"','versionName "1.9.15"')
           p.write_text(s)
           p=Path("app/src/main/res/values/strings.xml")
           p.write_text(p.read_text().replace("v1.9.13","v1.9.15"))
