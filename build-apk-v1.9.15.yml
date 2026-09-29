@@ -1,4 +1,4 @@
-name: Build Where Is My Car v1.9.15
+name: Build Where Is My Car v1.9.15 CLEAN
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
-      - name: "Apply v1.9.12 garage test build"
+      - name: Apply v1.9.12 garage test build
         shell: bash
         run: |
           cat > app/src/main/java/com/inaki/micoche/GaragePrefs.java <<'JAVA'
@@ -148,7 +148,7 @@ jobs:
           p.write_text(s)
           PY
 
-      - name: "Apply v1.9.13 visible Parking mode"
+      - name: Apply v1.9.13 visible Parking mode
         shell: bash
         run: |
           python3 - <<'PY'
@@ -261,127 +261,35 @@ jobs:
           p.write_text(s)
           PY
 
-      - name: "Apply v1.9.14 precise disconnect GPS"
+      - name: Apply v1.9.15 clean changes
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("app/build.gradle"); x=p.read_text()
-          x=x.replace("versionCode 23","versionCode 24").replace('versionName "1.9.13"','versionName "1.9.14"'); p.write_text(x)
-          p=Path("app/src/main/res/values/strings.xml"); p.write_text(p.read_text().replace("v1.9.13","v1.9.14"))
-          p=Path("app/src/main/java/com/inaki/micoche/AutoParkingManager.java"); x=p.read_text()
-          x=x.replace("import android.location.LocationManager;", "import android.location.LocationManager;\nimport android.location.LocationListener;\nimport android.os.Bundle;\nimport android.os.Handler;\nimport android.os.Looper;")
-          a=x.index("    public static void saveAutomaticParking(Context context, boolean testMode) {")
-          b=x.index("\n    private static Location bestRecentLocation",a)
-          method="""    public static void saveAutomaticParking(Context context, boolean testMode) {
-        if (!testMode && !AutoParkingPrefs.enabled(context)) return;
-        if (!hasForegroundLocation(context) || !hasBackgroundLocation(context)) {
-            AutoParkingPrefs.setLastEvent(context, "No se guardó: falta ubicación todo el tiempo.");
-            return;
-        }
-        if (!testMode && AutoParkingPrefs.recentlyAutoSaved(context)) return;
-        LocationManager lm=(LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
-        if (testMode) {
-            Location old=bestRecentLocation(lm);
-            if(old!=null) saveLocation(context,old,true); else waitForPreciseGps(context,lm,true);
-        } else waitForPreciseGps(context,lm,false);
-    }
+          import base64
+          p=Path("app/build.gradle"); s=p.read_text()
+          s=s.replace("versionCode 23","versionCode 25").replace('versionName "1.9.13"','versionName "1.9.15"')
+          p.write_text(s)
+          p=Path("app/src/main/res/values/strings.xml")
+          p.write_text(p.read_text().replace("v1.9.13","v1.9.15"))
 
-    private static void waitForPreciseGps(Context context, LocationManager lm, boolean testMode) {
-        final long disconnectedAt=System.currentTimeMillis();
-        final Location[] best={null};
-        final Handler h=new Handler(Looper.getMainLooper());
-        final LocationListener[] ref=new LocationListener[1];
-        ref[0]=new LocationListener() {
-            @Override public void onLocationChanged(Location l) {
-                if(l==null || l.getTime()<disconnectedAt-2000L || !l.hasAccuracy()) return;
-                if(best[0]==null || l.getAccuracy()<best[0].getAccuracy()) best[0]=l;
-                if(l.getAccuracy()<=20f) {
-                    try{lm.removeUpdates(ref[0]);}catch(Exception ignored){}
-                    h.removeCallbacksAndMessages(null);
-                    saveLocation(context,l,testMode);
-                }
-            }
-            @Override public void onStatusChanged(String p,int s,Bundle e){}
-            @Override public void onProviderEnabled(String p){}
-            @Override public void onProviderDisabled(String p){}
-        };
-        AutoParkingPrefs.setLastEvent(context,"Bluetooth desconectado: buscando GPS preciso…");
-        notifyStatus(context,"Aparcamiento detectado","Buscando una posición GPS precisa.");
-        try {
-            if(lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000L,0f,ref[0],Looper.getMainLooper());
-            if(lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,1000L,0f,ref[0],Looper.getMainLooper());
-        } catch(SecurityException e){ return; }
-        h.postDelayed(() -> {
-            try{lm.removeUpdates(ref[0]);}catch(Exception ignored){}
-            Location l=best[0];
-            if(l!=null && l.hasAccuracy() && l.getAccuracy()<=35f) saveLocation(context,l,testMode);
-            else {
-                AutoParkingPrefs.setLastEvent(context,"Bluetooth desconectado: esperando GPS preciso.");
-                notifyStatus(context,"Parking · esperando GPS","No guardaré una posición imprecisa. Usa Parking si estás bajo cubierta.");
-            }
-        },60000L);
-    }
-"""
-          p.write_text(x[:a]+method+x[b:])
+          p=Path("app/src/main/java/com/inaki/micoche/AutoParkingManager.java"); s=p.read_text()
+          s=s.replace("import android.location.LocationManager;", "import android.location.LocationManager;\\nimport android.location.LocationListener;\\nimport android.os.Bundle;\\nimport android.os.Handler;\\nimport android.os.Looper;")
+          a=s.index("    public static void saveAutomaticParking(Context context, boolean testMode) {")
+          b=s.index("\n    private static Location bestRecentLocation",a)
+          method=base64.b64decode("ICAgIHB1YmxpYyBzdGF0aWMgdm9pZCBzYXZlQXV0b21hdGljUGFya2luZyhDb250ZXh0IGNvbnRleHQsIGJvb2xlYW4gdGVzdE1vZGUpIHsKICAgICAgICBpZiAoIXRlc3RNb2RlICYmICFBdXRvUGFya2luZ1ByZWZzLmVuYWJsZWQoY29udGV4dCkpIHJldHVybjsKICAgICAgICBpZiAoIWhhc0ZvcmVncm91bmRMb2NhdGlvbihjb250ZXh0KSB8fCAhaGFzQmFja2dyb3VuZExvY2F0aW9uKGNvbnRleHQpKSByZXR1cm47CiAgICAgICAgaWYgKCF0ZXN0TW9kZSAmJiBBdXRvUGFya2luZ1ByZWZzLnJlY2VudGx5QXV0b1NhdmVkKGNvbnRleHQpKSByZXR1cm47CiAgICAgICAgTG9jYXRpb25NYW5hZ2VyIGxtPShMb2NhdGlvbk1hbmFnZXIpY29udGV4dC5nZXRTeXN0ZW1TZXJ2aWNlKENvbnRleHQuTE9DQVRJT05fU0VSVklDRSk7CiAgICAgICAgd2FpdEZvclByZWNpc2VHcHMoY29udGV4dCxsbSx0ZXN0TW9kZSk7CiAgICB9CgogICAgcHJpdmF0ZSBzdGF0aWMgdm9pZCB3YWl0Rm9yUHJlY2lzZUdwcyhDb250ZXh0IGNvbnRleHQsIExvY2F0aW9uTWFuYWdlciBsbSwgYm9vbGVhbiB0ZXN0TW9kZSkgewogICAgICAgIGZpbmFsIGxvbmcgc3RhcnRlZD1TeXN0ZW0uY3VycmVudFRpbWVNaWxsaXMoKTsKICAgICAgICBmaW5hbCBMb2NhdGlvbltdIGJlc3Q9e251bGx9OwogICAgICAgIGZpbmFsIEhhbmRsZXIgaD1uZXcgSGFuZGxlcihMb29wZXIuZ2V0TWFpbkxvb3BlcigpKTsKICAgICAgICBmaW5hbCBMb2NhdGlvbkxpc3RlbmVyW10gcmVmPW5ldyBMb2NhdGlvbkxpc3RlbmVyWzFdOwogICAgICAgIHJlZlswXT1uZXcgTG9jYXRpb25MaXN0ZW5lcigpIHsKICAgICAgICAgICAgQE92ZXJyaWRlIHB1YmxpYyB2b2lkIG9uTG9jYXRpb25DaGFuZ2VkKExvY2F0aW9uIGwpIHsKICAgICAgICAgICAgICAgIGlmKGw9PW51bGwgfHwgbC5nZXRUaW1lKCk8c3RhcnRlZC0yMDAwTCB8fCAhbC5oYXNBY2N1cmFjeSgpKSByZXR1cm47CiAgICAgICAgICAgICAgICBpZihiZXN0WzBdPT1udWxsIHx8IGwuZ2V0QWNjdXJhY3koKTxiZXN0WzBdLmdldEFjY3VyYWN5KCkpIGJlc3RbMF09bDsKICAgICAgICAgICAgICAgIGlmKGwuZ2V0QWNjdXJhY3koKTw9MjBmKSB7CiAgICAgICAgICAgICAgICAgICAgdHJ5e2xtLnJlbW92ZVVwZGF0ZXMocmVmWzBdKTt9Y2F0Y2goRXhjZXB0aW9uIGlnbm9yZWQpe30KICAgICAgICAgICAgICAgICAgICBoLnJlbW92ZUNhbGxiYWNrc0FuZE1lc3NhZ2VzKG51bGwpOwogICAgICAgICAgICAgICAgICAgIHNhdmVMb2NhdGlvbihjb250ZXh0LGwsdGVzdE1vZGUpOwogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgICAgIEBPdmVycmlkZSBwdWJsaWMgdm9pZCBvblN0YXR1c0NoYW5nZWQoU3RyaW5nIHAsaW50IHN0LEJ1bmRsZSBlKXt9CiAgICAgICAgICAgIEBPdmVycmlkZSBwdWJsaWMgdm9pZCBvblByb3ZpZGVyRW5hYmxlZChTdHJpbmcgcCl7fQogICAgICAgICAgICBAT3ZlcnJpZGUgcHVibGljIHZvaWQgb25Qcm92aWRlckRpc2FibGVkKFN0cmluZyBwKXt9CiAgICAgICAgfTsKICAgICAgICBBdXRvUGFya2luZ1ByZWZzLnNldExhc3RFdmVudChjb250ZXh0LCJCbHVldG9vdGggZGVzY29uZWN0YWRvOiBidXNjYW5kbyBHUFMgcHJlY2lzby4uLiIpOwogICAgICAgIHRyeSB7CiAgICAgICAgICAgIGlmKGxtLmlzUHJvdmlkZXJFbmFibGVkKExvY2F0aW9uTWFuYWdlci5HUFNfUFJPVklERVIpKQogICAgICAgICAgICAgICAgbG0ucmVxdWVzdExvY2F0aW9uVXBkYXRlcyhMb2NhdGlvbk1hbmFnZXIuR1BTX1BST1ZJREVSLDEwMDBMLDBmLHJlZlswXSxMb29wZXIuZ2V0TWFpbkxvb3BlcigpKTsKICAgICAgICAgICAgaWYobG0uaXNQcm92aWRlckVuYWJsZWQoTG9jYXRpb25NYW5hZ2VyLk5FVFdPUktfUFJPVklERVIpKQogICAgICAgICAgICAgICAgbG0ucmVxdWVzdExvY2F0aW9uVXBkYXRlcyhMb2NhdGlvbk1hbmFnZXIuTkVUV09SS19QUk9WSURFUiwxMDAwTCwwZixyZWZbMF0sTG9vcGVyLmdldE1haW5Mb29wZXIoKSk7CiAgICAgICAgfSBjYXRjaChTZWN1cml0eUV4Y2VwdGlvbiBlKXtyZXR1cm47fQogICAgICAgIGgucG9zdERlbGF5ZWQoKCkgLT4gewogICAgICAgICAgICB0cnl7bG0ucmVtb3ZlVXBkYXRlcyhyZWZbMF0pO31jYXRjaChFeGNlcHRpb24gaWdub3JlZCl7fQogICAgICAgICAgICBMb2NhdGlvbiBsPWJlc3RbMF07CiAgICAgICAgICAgIGlmKGwhPW51bGwgJiYgbC5oYXNBY2N1cmFjeSgpICYmIGwuZ2V0QWNjdXJhY3koKTw9MzVmKSBzYXZlTG9jYXRpb24oY29udGV4dCxsLHRlc3RNb2RlKTsKICAgICAgICAgICAgZWxzZSBBdXRvUGFya2luZ1ByZWZzLnNldExhc3RFdmVudChjb250ZXh0LCJCbHVldG9vdGggZGVzY29uZWN0YWRvOiBlc3BlcmFuZG8gR1BTIHByZWNpc28uIik7CiAgICAgICAgfSw2MDAwMEwpOwogICAgfQo=").decode()
+          s=s[:a]+method+s[b:]
+          s=s.replace("GaragePrefs.nearestName(context, lat, lon, 200f)","GaragePrefs.nearestName(context, lat, lon, 100f)")
+          p.write_text(s)
+
+          p=Path("app/src/main/java/com/inaki/micoche/MainActivity.java"); s=p.read_text()
+          s=s.replace("GaragePrefs.nearestName(this, location.getLatitude(), location.getLongitude(), 200f)","GaragePrefs.nearestName(this, location.getLatitude(), location.getLongitude(), 100f)")
+          p.write_text(s)
           PY
 
-      - name: "Apply v1.9.15 habitual garages"
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path("app/build.gradle"); x=p.read_text()
-          x=x.replace("versionCode 24","versionCode 25").replace('versionName "1.9.14"','versionName "1.9.15"'); p.write_text(x)
-          p=Path("app/src/main/res/values/strings.xml"); p.write_text(p.read_text().replace("v1.9.14","v1.9.15"))
-
-          p=Path("app/src/main/res/layout/dialog_settings.xml"); x=p.read_text()
-          x=x.replace('android:text="Casa"', 'android:text="🏠 Casa · Guardar ubicación actual"')
-          x=x.replace('android:text="Casa 2"', 'android:text="🏠 Casa 2 · Guardar ubicación actual"')
-          x=x.replace('android:text="Trabajo"', 'android:text="💼 Trabajo · Guardar ubicación actual"')
-          p.write_text(x)
-
-          p=Path("app/src/main/java/com/inaki/micoche/AutoParkingManager.java"); x=p.read_text()
-          needle='''        CarStorage.save(
-                  context,
-                  lat,
-                  lon,
-                  initialAddress,
-                  time,
-                  CarStorage.SOURCE_AUTO);'''
-          replacement='''        String habitualGarage = GaragePrefs.nearestName(context, lat, lon, 100f);
-          if (habitualGarage != null) {
-              CarStorage.saveParking(context, lat, lon,
-                      habitualGarage + " · GPS preciso", time, habitualGarage, false, "");
-          } else {
-              CarStorage.save(context, lat, lon, initialAddress, time, CarStorage.SOURCE_AUTO);
-          }'''
-          if needle not in x: raise SystemExit("saveLocation pattern not found")
-          x=x.replace(needle,replacement,1)
-          p.write_text(x)
-
-          p=Path("app/src/main/java/com/inaki/micoche/MainActivity.java"); x=p.read_text()
-          x=x.replace('summary.setText(GaragePrefs.summary(this));',
-                      'summary.setText(GaragePrefs.summary(this) + "\\nDetección automática: 100 m. Se guarda la posición GPS precisa del coche.");')
-          needle='''        requestFreshLocation(location -> {
-              if (location == null) {
-                  Toast.makeText(this, "No he podido obtener la ubicación actual.", Toast.LENGTH_LONG).show();
-                  return;
-              }
-              GaragePrefs.save(this, name, location.getLatitude(), location.getLongitude());'''
-          replacement='''        requestFreshLocation(location -> {
-              if (location == null || (location.hasAccuracy() && location.getAccuracy() > 35f)) {
-                  Toast.makeText(this, "Necesito GPS preciso para configurar " + name + ". Inténtalo de nuevo al aire libre.", Toast.LENGTH_LONG).show();
-                  return;
-              }
-              GaragePrefs.save(this, name, location.getLatitude(), location.getLongitude());'''
-          if needle in x: x=x.replace(needle,replacement)
-          p.write_text(x)
-          PY
-
-      - name: "Build APK"
+      - name: Build APK
         run: gradle :app:assembleDebug --stacktrace
-      - name: "Rename APK"
+      - name: Rename APK
         run: cp app/build/outputs/apk/debug/app-debug.apk WhereIsMyCar-v1.9.15.apk
       - uses: actions/upload-artifact@v4
         with:
