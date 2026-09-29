@@ -24,6 +24,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.Bitmap;
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -57,6 +60,10 @@ public class MainActivity extends Activity {
     private static final int REQ_BT_CONNECT = 20;
     private static final int REQ_ASSOCIATE_CAR = 21;
     private static final int REQ_NOTIFICATIONS = 22;
+    private static final int REQ_PARKING_PHOTO = 23;
+    private static final long APPROX_MAX_AGE_MS = 10 * 60 * 1000L;
+    private String pendingParkingName;
+    private Location pendingParkingLocation;
 
     private View rootView;
     private WebView mapWeb;
@@ -255,7 +262,11 @@ public class MainActivity extends Activity {
         double lat = CarStorage.lat(this);
         double lon = CarStorage.lon(this);
 
-        statusTitle.setText("Coche guardado");
+        if (CarStorage.SOURCE_GARAGE.equals(CarStorage.source(this))) {
+            statusTitle.setText(CarStorage.approximate(this) ? "Coche en parking · GPS aproximado" : "Coche en parking · GPS preciso");
+        } else {
+            statusTitle.setText("Coche guardado");
+        }
 
         String ago = formatAgo(CarStorage.time(this));
         if (CarStorage.SOURCE_AUTO.equals(CarStorage.source(this))) {
@@ -836,10 +847,7 @@ public class MainActivity extends Activity {
 
         requestFreshLocation(location -> {
             if (location == null) {
-                Toast.makeText(
-                        this,
-                        "No he podido obtener la ubicación. Inténtalo de nuevo.",
-                        Toast.LENGTH_LONG).show();
+                offerGarageParking();
                 return;
             }
 
@@ -863,6 +871,72 @@ public class MainActivity extends Activity {
                     this,
                     "Coche guardado aquí",
                     Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void offerGarageParking() {
+        Location approx = bestRecentLastKnown();
+        if (approx == null) {
+            Toast.makeText(this, "Sin GPS actual ni una posición reciente para usar como referencia.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        String[] choices = {"Casa", "Casa 2", "Trabajo", "Parking temporal · hacer foto"};
+        new AlertDialog.Builder(this)
+                .setTitle("¿Has aparcado en un parking?")
+                .setMessage("No hay GPS preciso. Guardaré la última posición fiable como aproximada. Si después recupero una señal mejor, actualizaré el GPS automáticamente.")
+                .setItems(choices, (d, which) -> {
+                    pendingParkingLocation = approx;
+                    pendingParkingName = which == 0 ? "Casa" : which == 1 ? "Casa 2" : which == 2 ? "Trabajo" : "Parking temporal";
+                    if (which == 3) openParkingCamera();
+                    else saveGarageParking("");
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private Location bestRecentLastKnown() {
+        if (!hasLocationPermission() || locationManager == null) return null;
+        try {
+            Location best = null;
+            long now = System.currentTimeMillis();
+            for (String provider : locationManager.getProviders(true)) {
+                Location l = locationManager.getLastKnownLocation(provider);
+                if (l == null || now - l.getTime() > APPROX_MAX_AGE_MS) continue;
+                if (best == null || l.getTime() > best.getTime()) best = l;
+            }
+            return best;
+        } catch (SecurityException e) { return null; }
+    }
+
+    private void openParkingCamera() {
+        try {
+            Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+            if (intent.resolveActivity(getPackageManager()) != null) startActivityForResult(intent, REQ_PARKING_PHOTO);
+            else saveGarageParking("");
+        } catch (Exception e) { saveGarageParking(""); }
+    }
+
+    private void saveGarageParking(String photoBase64) {
+        if (pendingParkingLocation == null) return;
+        CarStorage.saveParking(this, pendingParkingLocation.getLatitude(), pendingParkingLocation.getLongitude(),
+                pendingParkingName + " · ubicación aproximada", System.currentTimeMillis(), pendingParkingName, true, photoBase64);
+        refreshUi();
+        CarWidgetProvider.updateAll(this);
+        Toast.makeText(this, pendingParkingName + " guardado · GPS aproximado", Toast.LENGTH_LONG).show();
+        pendingParkingLocation = null;
+        pendingParkingName = null;
+    }
+
+    private void improveGarageGpsIfPossible() {
+        if (!CarStorage.hasCar(this) || !CarStorage.SOURCE_GARAGE.equals(CarStorage.source(this)) || !CarStorage.approximate(this) || !hasLocationPermission()) return;
+        requestFreshLocation(location -> {
+            if (location == null) return;
+            if (location.hasAccuracy() && location.getAccuracy() > 60f) return;
+            CarStorage.markPrecise(this, location.getLatitude(), location.getLongitude(), CarStorage.parkingName(this) + " · GPS actualizado al recuperar señal");
+            refreshUi();
+            updateDistance(location);
+            CarWidgetProvider.updateAll(this);
+            Toast.makeText(this, "GPS del parking actualizado con una posición precisa", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -1205,6 +1279,20 @@ public class MainActivity extends Activity {
                 resultCode,
                 data);
 
+        if (requestCode == REQ_PARKING_PHOTO) {
+            String encoded = "";
+            if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
+                Object value = data.getExtras().get("data");
+                if (value instanceof Bitmap) {
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    ((Bitmap) value).compress(Bitmap.CompressFormat.JPEG, 82, out);
+                    encoded = Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP);
+                }
+            }
+            saveGarageParking(encoded);
+            return;
+        }
+
         if (requestCode != REQ_ASSOCIATE_CAR
                 || resultCode != RESULT_OK
                 || data == null) {
@@ -1357,6 +1445,8 @@ public class MainActivity extends Activity {
         if (locationManager != null) {
             refreshDistanceFromLastKnown();
         }
+
+        rootView.postDelayed(this::improveGarageGpsIfPossible, 700);
 
         if (currentSettingsView != null) {
             updateSettingsView(currentSettingsView);

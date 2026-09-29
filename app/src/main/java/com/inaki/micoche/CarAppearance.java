@@ -16,12 +16,11 @@ public final class CarAppearance {
     private static final String KEY_MODEL = "model";
     private static final String KEY_COLOR = "color";
 
-    public static final String[] MODELS = {"Urban", "Sedan", "SUV", "Sport", "Off-road", "Van"};
+    public static final String[] MODELS = {"Urbano", "Berlina", "SUV", "Furgoneta"};
     public static final String[] COLORS = {"Orange", "Red", "Blue", "Black", "White", "Green", "Yellow"};
 
     private static final int[] MODEL_RESOURCES = {
-            R.drawable.car_urban, R.drawable.car_sedan, R.drawable.car_suv,
-            R.drawable.car_sport, R.drawable.car_offroad, R.drawable.car_van
+            R.drawable.car_urban, R.drawable.car_sedan, R.drawable.car_suv, R.drawable.car_van
     };
     private static final int[] COLOR_VALUES = {
             0xffff7900, 0xffdc2626, 0xff2477e8, 0xff202329,
