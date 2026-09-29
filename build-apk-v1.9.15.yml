@@ -22,7 +22,7 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
-      - name: Apply v1.9.12 garage test build
+      - name: "Apply v1.9.12 garage test build"
         shell: bash
         run: |
           cat > app/src/main/java/com/inaki/micoche/GaragePrefs.java <<'JAVA'
@@ -148,7 +148,7 @@ jobs:
           p.write_text(s)
           PY
 
-      - name: Apply v1.9.13 visible Parking mode
+      - name: "Apply v1.9.13 visible Parking mode"
         shell: bash
         run: |
           python3 - <<'PY'
@@ -261,7 +261,7 @@ jobs:
           p.write_text(s)
           PY
 
-      - name: Apply v1.9.14 precise disconnect GPS
+      - name: "Apply v1.9.14 precise disconnect GPS"
         shell: bash
         run: |
           python3 - <<'PY'
@@ -326,7 +326,7 @@ jobs:
           p.write_text(x[:a]+method+x[b:])
           PY
 
-      - name: Apply v1.9.15 habitual garages
+      - name: "Apply v1.9.15 habitual garages"
         shell: bash
         run: |
           python3 - <<'PY'
@@ -379,9 +379,9 @@ jobs:
           p.write_text(x)
           PY
 
-      - name: Build APK
+      - name: "Build APK"
         run: gradle :app:assembleDebug --stacktrace
-      - name: Rename APK
+      - name: "Rename APK"
         run: cp app/build/outputs/apk/debug/app-debug.apk WhereIsMyCar-v1.9.15.apk
       - uses: actions/upload-artifact@v4
         with:
