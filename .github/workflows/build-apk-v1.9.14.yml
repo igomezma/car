@@ -1,0 +1,338 @@
+name: Build Where Is My Car v1.9.14
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Apply v1.9.12 garage test build
+        shell: bash
+        run: |
+          cat > app/src/main/java/com/inaki/micoche/GaragePrefs.java <<'JAVA'
+          package com.inaki.micoche;
+          import android.content.Context;
+          import android.content.SharedPreferences;
+          import android.location.Location;
+          public final class GaragePrefs {
+              private static final String PREFS="known_garages";
+              public static final String HOME="Casa", HOME2="Casa 2", WORK="Trabajo";
+              private static final String[] NAMES={HOME,HOME2,WORK};
+              private GaragePrefs(){}
+              private static SharedPreferences p(Context c){return c.getSharedPreferences(PREFS,Context.MODE_PRIVATE);}
+              private static String k(String n,String s){return n.toLowerCase().replace(" ","_")+"_"+s;}
+              public static void save(Context c,String n,double lat,double lon){p(c).edit().putBoolean(k(n,"set"),true).putLong(k(n,"lat"),Double.doubleToRawLongBits(lat)).putLong(k(n,"lon"),Double.doubleToRawLongBits(lon)).apply();}
+              public static boolean has(Context c,String n){return p(c).getBoolean(k(n,"set"),false);}
+              public static double lat(Context c,String n){return Double.longBitsToDouble(p(c).getLong(k(n,"lat"),Double.doubleToRawLongBits(0)));}
+              public static double lon(Context c,String n){return Double.longBitsToDouble(p(c).getLong(k(n,"lon"),Double.doubleToRawLongBits(0)));}
+              public static String nearestName(Context c,double lat,double lon,float max){String best=null;float bd=Float.MAX_VALUE;float[] d=new float[1];for(String n:NAMES){if(!has(c,n))continue;Location.distanceBetween(lat,lon,lat(c,n),lon(c,n),d);if(d[0]<=max&&d[0]<bd){bd=d[0];best=n;}}return best;}
+              public static String summary(Context c){return one(c,HOME)+" | "+one(c,HOME2)+" | "+one(c,WORK);}
+              private static String one(Context c,String n){return has(c,n)?"✓ "+n:"○ "+n;}
+          }
+          JAVA
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path("app/build.gradle")
+          s=p.read_text().replace("versionCode 21","versionCode 22").replace('versionName "1.9.11"','versionName "1.9.12"')
+          p.write_text(s)
+
+          p=Path("app/src/main/res/values/strings.xml")
+          p.write_text(p.read_text().replace("v1.9.11","v1.9.12"))
+
+          p=Path("app/src/main/res/layout/dialog_settings.xml")
+          s=p.read_text()
+          marker='    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center" android:text="@string/v19_note"'
+          garage='''    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="10dp" android:layout_marginBottom="8dp" android:background="@color/muted2" />
+              <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Garajes y parking" android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold" />
+              <TextView android:id="@+id/garageSummary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Casa | Casa 2 | Trabajo" android:textColor="@color/muted" android:textSize="11sp" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="42dp" android:layout_marginTop="7dp" android:orientation="horizontal">
+                <Button android:id="@+id/garageHomeButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="Casa" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+                <Space android:layout_width="5dp" android:layout_height="1dp"/>
+                <Button android:id="@+id/garageHome2Button" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="Casa 2" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+                <Space android:layout_width="5dp" android:layout_height="1dp"/>
+                <Button android:id="@+id/garageWorkButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="Trabajo" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+              </LinearLayout>
+              <Button android:id="@+id/tempParkingButton" android:layout_width="match_parent" android:layout_height="42dp" android:layout_marginTop="6dp" android:background="@drawable/bg_primary_button" android:text="Parking temporal · guardar + foto" android:textAllCaps="false" android:textColor="@color/white" android:textSize="12sp" android:textStyle="bold"/>
+          '''
+          if "garageHomeButton" not in s:
+              s=s.replace(marker,garage+marker)
+          p.write_text(s)
+
+          p=Path("app/src/main/java/com/inaki/micoche/MainActivity.java")
+          s=p.read_text()
+          needle='''        disable.setOnClickListener(v -> {
+              AutoParkingManager.stopObservation(this);'''
+          insert='''        view.findViewById(R.id.garageHomeButton).setOnClickListener(v -> setKnownGarageHere(GaragePrefs.HOME));
+              view.findViewById(R.id.garageHome2Button).setOnClickListener(v -> setKnownGarageHere(GaragePrefs.HOME2));
+              view.findViewById(R.id.garageWorkButton).setOnClickListener(v -> setKnownGarageHere(GaragePrefs.WORK));
+              view.findViewById(R.id.tempParkingButton).setOnClickListener(v -> startTemporaryParking());
+
+              disable.setOnClickListener(v -> {
+              AutoParkingManager.stopObservation(this);'''
+          if "setKnownGarageHere(GaragePrefs.HOME)" not in s:
+              s=s.replace(needle,insert)
+
+          needle2='        Button disable = view.findViewById(R.id.disableAutoParkingButton);'
+          repl2=needle2+'\n        TextView garageSummary = view.findViewById(R.id.garageSummary);\n        if (garageSummary != null) garageSummary.setText(GaragePrefs.summary(this));'
+          s=s.replace(needle2,repl2)
+
+          anchor='    private void offerGarageParking() {'
+          methods='''    private void setKnownGarageHere(String name) {
+              if (!hasLocationPermission()) {
+                  Toast.makeText(this, "Concede ubicación y vuelve a pulsar " + name, Toast.LENGTH_LONG).show();
+                  requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQ_LOCATION);
+                  return;
+              }
+              requestFreshLocation(location -> {
+                  if (location == null) { Toast.makeText(this, "No he podido obtener GPS para " + name, Toast.LENGTH_LONG).show(); return; }
+                  GaragePrefs.save(this, name, location.getLatitude(), location.getLongitude());
+                  if (currentSettingsView != null) updateSettingsView(currentSettingsView);
+                  Toast.makeText(this, name + " configurado para reconocimiento automático", Toast.LENGTH_LONG).show();
+              });
+          }
+
+              private void startTemporaryParking() {
+              Location approx = bestRecentLastKnown();
+              if (approx == null) {
+                  requestFreshLocation(location -> {
+                      if (location == null) { Toast.makeText(this, "No hay una posición reciente para el parking.", Toast.LENGTH_LONG).show(); return; }
+                      pendingParkingLocation = location; pendingParkingName = "Parking temporal"; openParkingCamera();
+                  });
+                  return;
+              }
+              pendingParkingLocation = approx;
+              pendingParkingName = "Parking temporal";
+              openParkingCamera();
+          }
+
+          '''
+          if "private void setKnownGarageHere" not in s:
+              s=s.replace(anchor,methods+anchor)
+          p.write_text(s)
+
+          p=Path("app/src/main/java/com/inaki/micoche/AutoParkingManager.java")
+          s=p.read_text()
+          old='''        CarStorage.save(
+                  context,
+                  lat,
+                  lon,
+                  initialAddress,
+                  time,
+                  CarStorage.SOURCE_AUTO);'''
+          new='''        String knownGarage = GaragePrefs.nearestName(context, lat, lon, 200f);
+              if (knownGarage != null) {
+                  CarStorage.saveParking(context, lat, lon, knownGarage + " · detectado automáticamente", time, knownGarage, false, "");
+              } else {
+                  CarStorage.saveParking(context, lat, lon, "Parking temporal · ubicación aproximada", time, "Parking temporal", true, "");
+              }'''
+          if old in s:
+              s=s.replace(old,new)
+          p.write_text(s)
+          PY
+
+      - name: Apply v1.9.13 visible Parking mode
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path("app/build.gradle"); s=p.read_text()
+          s=s.replace("versionCode 22","versionCode 23").replace('versionName "1.9.12"','versionName "1.9.13"')
+          p.write_text(s)
+          p=Path("app/src/main/res/values/strings.xml"); p.write_text(p.read_text().replace("v1.9.12","v1.9.13"))
+
+          p=Path("app/src/main/res/layout/activity_main.xml"); s=p.read_text()
+          s=s.replace('android:id="@+id/shareButton"', 'android:id="@+id/parkingButton"')
+          s=s.replace('android:drawableTop="@drawable/ic_action_share"', 'android:drawableTop="@drawable/ic_location_small"')
+          s=s.replace('android:text="@string/share"', 'android:text="🅿 Parking"')
+          p.write_text(s)
+
+          p=Path("app/src/main/res/layout/widget_car.xml"); s=p.read_text()
+          marker='        <TextView\n            android:id="@+id/widgetNavigate"'
+          parking='''        <TextView
+              android:id="@+id/widgetParking"
+              android:layout_width="0dp"
+              android:layout_height="match_parent"
+              android:layout_marginStart="7dp"
+              android:layout_weight="1"
+              android:background="@drawable/bg_primary_button"
+              android:gravity="center"
+              android:text="🅿 Parking"
+              android:textColor="@color/white"
+              android:textSize="11sp"
+              android:textStyle="bold" />
+
+          '''
+          if "widgetParking" not in s: s=s.replace(marker,parking+marker)
+          p.write_text(s)
+
+          p=Path("app/src/main/java/com/inaki/micoche/MainActivity.java"); s=p.read_text()
+          s=s.replace('public static final String ACTION_SAVE_NOW = "com.inaki.micoche.SAVE_NOW";',
+                      'public static final String ACTION_SAVE_NOW = "com.inaki.micoche.SAVE_NOW";\n    public static final String ACTION_PARKING_NOW = "com.inaki.micoche.PARKING_NOW";')
+          s=s.replace('findViewById(R.id.shareButton).setOnClickListener(v -> shareCar());',
+                      'findViewById(R.id.parkingButton).setOnClickListener(v -> startParkingMode());')
+          old='''        if (ACTION_SAVE_NOW.equals(getIntent().getAction())) {
+              rootView.postDelayed(this::saveCurrentLocation, 250);
+          }'''
+          new='''        if (ACTION_SAVE_NOW.equals(getIntent().getAction())) {
+              rootView.postDelayed(this::saveCurrentLocation, 250);
+          } else if (ACTION_PARKING_NOW.equals(getIntent().getAction())) {
+              rootView.postDelayed(this::startParkingMode, 250);
+          }'''
+          s=s.replace(old,new)
+          old='''        if (ACTION_SAVE_NOW.equals(intent.getAction())) {
+              rootView.postDelayed(
+                      this::saveCurrentLocation,
+                      150);
+          }'''
+          new='''        if (ACTION_SAVE_NOW.equals(intent.getAction())) {
+              rootView.postDelayed(this::saveCurrentLocation, 150);
+          } else if (ACTION_PARKING_NOW.equals(intent.getAction())) {
+              rootView.postDelayed(this::startParkingMode, 150);
+          }'''
+          s=s.replace(old,new)
+          anchor='    private void startTemporaryParking() {'
+          mode='''    private void startParkingMode() {
+              Location approx = bestRecentLastKnown();
+              if (approx == null) {
+                  requestFreshLocation(location -> {
+                      if (location == null) {
+                          Toast.makeText(this, "Modo Parking activo. Esperando GPS; vuelve a pulsar Parking cuando quieras guardar la referencia.", Toast.LENGTH_LONG).show();
+                          return;
+                      }
+                      beginParkingWithReference(location);
+                  });
+              } else beginParkingWithReference(approx);
+          }
+
+              private void beginParkingWithReference(Location location) {
+              String known = GaragePrefs.nearestName(this, location.getLatitude(), location.getLongitude(), 200f);
+              pendingParkingLocation = location;
+              pendingParkingName = known == null ? "Parking temporal" : known;
+              if (known != null) {
+                  CarStorage.saveParking(this, location.getLatitude(), location.getLongitude(),
+                          known + " · ubicación aproximada", System.currentTimeMillis(), known, true, "");
+                  refreshUi(); CarWidgetProvider.updateAll(this);
+                  Toast.makeText(this, "🅿 " + known + " detectado. Esperando GPS preciso.", Toast.LENGTH_LONG).show();
+              } else {
+                  CarStorage.saveParking(this, location.getLatitude(), location.getLongitude(),
+                          "Parking temporal · ubicación aproximada · esperando GPS preciso",
+                          System.currentTimeMillis(), "Parking temporal", true, "");
+                  refreshUi(); CarWidgetProvider.updateAll(this);
+                  Toast.makeText(this, "🅿 Parking activo · haz la foto de la plaza.", Toast.LENGTH_LONG).show();
+                  openParkingCamera();
+              }
+          }
+
+          '''
+          if "private void startParkingMode()" not in s: s=s.replace(anchor,mode+anchor)
+          p.write_text(s)
+
+          p=Path("app/src/main/java/com/inaki/micoche/CarWidgetProvider.java"); s=p.read_text()
+          needle='        views.setOnClickPendingIntent(R.id.widgetSave, savePending);'
+          add='''        views.setOnClickPendingIntent(R.id.widgetSave, savePending);
+
+              Intent parkingIntent = new Intent(context, MainActivity.class);
+              parkingIntent.setAction(MainActivity.ACTION_PARKING_NOW);
+              parkingIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+              PendingIntent parkingPending = PendingIntent.getActivity(
+                      context, appWidgetId * 100 + 3, parkingIntent,
+                      PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+              views.setOnClickPendingIntent(R.id.widgetParking, parkingPending);'''
+          if "widgetParking, parkingPending" not in s: s=s.replace(needle,add)
+          p.write_text(s)
+          PY
+
+      - name: Apply v1.9.14 precise disconnect GPS
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("app/build.gradle"); x=p.read_text()
+          x=x.replace("versionCode 23","versionCode 24").replace('versionName "1.9.13"','versionName "1.9.14"'); p.write_text(x)
+          p=Path("app/src/main/res/values/strings.xml"); p.write_text(p.read_text().replace("v1.9.13","v1.9.14"))
+          p=Path("app/src/main/java/com/inaki/micoche/AutoParkingManager.java"); x=p.read_text()
+          x=x.replace("import android.location.LocationManager;", "import android.location.LocationManager;\nimport android.location.LocationListener;\nimport android.os.Bundle;\nimport android.os.Handler;\nimport android.os.Looper;")
+          a=x.index("    public static void saveAutomaticParking(Context context, boolean testMode) {")
+          b=x.index("\n    private static Location bestRecentLocation",a)
+          method="""    public static void saveAutomaticParking(Context context, boolean testMode) {
+        if (!testMode && !AutoParkingPrefs.enabled(context)) return;
+        if (!hasForegroundLocation(context) || !hasBackgroundLocation(context)) {
+            AutoParkingPrefs.setLastEvent(context, "No se guardó: falta ubicación todo el tiempo.");
+            return;
+        }
+        if (!testMode && AutoParkingPrefs.recentlyAutoSaved(context)) return;
+        LocationManager lm=(LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
+        if (testMode) {
+            Location old=bestRecentLocation(lm);
+            if(old!=null) saveLocation(context,old,true); else waitForPreciseGps(context,lm,true);
+        } else waitForPreciseGps(context,lm,false);
+    }
+
+    private static void waitForPreciseGps(Context context, LocationManager lm, boolean testMode) {
+        final long disconnectedAt=System.currentTimeMillis();
+        final Location[] best={null};
+        final Handler h=new Handler(Looper.getMainLooper());
+        final LocationListener[] ref=new LocationListener[1];
+        ref[0]=new LocationListener() {
+            @Override public void onLocationChanged(Location l) {
+                if(l==null || l.getTime()<disconnectedAt-2000L || !l.hasAccuracy()) return;
+                if(best[0]==null || l.getAccuracy()<best[0].getAccuracy()) best[0]=l;
+                if(l.getAccuracy()<=20f) {
+                    try{lm.removeUpdates(ref[0]);}catch(Exception ignored){}
+                    h.removeCallbacksAndMessages(null);
+                    saveLocation(context,l,testMode);
+                }
+            }
+            @Override public void onStatusChanged(String p,int s,Bundle e){}
+            @Override public void onProviderEnabled(String p){}
+            @Override public void onProviderDisabled(String p){}
+        };
+        AutoParkingPrefs.setLastEvent(context,"Bluetooth desconectado: buscando GPS preciso…");
+        notifyStatus(context,"Aparcamiento detectado","Buscando una posición GPS precisa.");
+        try {
+            if(lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000L,0f,ref[0],Looper.getMainLooper());
+            if(lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,1000L,0f,ref[0],Looper.getMainLooper());
+        } catch(SecurityException e){ return; }
+        h.postDelayed(() -> {
+            try{lm.removeUpdates(ref[0]);}catch(Exception ignored){}
+            Location l=best[0];
+            if(l!=null && l.hasAccuracy() && l.getAccuracy()<=35f) saveLocation(context,l,testMode);
+            else {
+                AutoParkingPrefs.setLastEvent(context,"Bluetooth desconectado: esperando GPS preciso.");
+                notifyStatus(context,"Parking · esperando GPS","No guardaré una posición imprecisa. Usa Parking si estás bajo cubierta.");
+            }
+        },60000L);
+    }
+"""
+          p.write_text(x[:a]+method+x[b:])
+          PY
+
+      - name: Build APK
+        run: gradle :app:assembleDebug --stacktrace
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk WhereIsMyCar-v1.9.14.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WhereIsMyCar-v1.9.14-APK
+          path: WhereIsMyCar-v1.9.14.apk
+          if-no-files-found: error
+          retention-days: 30
