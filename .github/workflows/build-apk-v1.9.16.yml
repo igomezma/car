@@ -1,0 +1,312 @@
+name: Build Where Is My Car v1.9.16
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Apply v1.9.12 garage test build
+        shell: bash
+        run: |
+          cat > app/src/main/java/com/inaki/micoche/GaragePrefs.java <<'JAVA'
+          package com.inaki.micoche;
+          import android.content.Context;
+          import android.content.SharedPreferences;
+          import android.location.Location;
+          public final class GaragePrefs {
+              private static final String PREFS="known_garages";
+              public static final String HOME="Casa", HOME2="Casa 2", WORK="Trabajo";
+              private static final String[] NAMES={HOME,HOME2,WORK};
+              private GaragePrefs(){}
+              private static SharedPreferences p(Context c){return c.getSharedPreferences(PREFS,Context.MODE_PRIVATE);}
+              private static String k(String n,String s){return n.toLowerCase().replace(" ","_")+"_"+s;}
+              public static void save(Context c,String n,double lat,double lon){p(c).edit().putBoolean(k(n,"set"),true).putLong(k(n,"lat"),Double.doubleToRawLongBits(lat)).putLong(k(n,"lon"),Double.doubleToRawLongBits(lon)).apply();}
+              public static boolean has(Context c,String n){return p(c).getBoolean(k(n,"set"),false);}
+              public static double lat(Context c,String n){return Double.longBitsToDouble(p(c).getLong(k(n,"lat"),Double.doubleToRawLongBits(0)));}
+              public static double lon(Context c,String n){return Double.longBitsToDouble(p(c).getLong(k(n,"lon"),Double.doubleToRawLongBits(0)));}
+              public static String nearestName(Context c,double lat,double lon,float max){String best=null;float bd=Float.MAX_VALUE;float[] d=new float[1];for(String n:NAMES){if(!has(c,n))continue;Location.distanceBetween(lat,lon,lat(c,n),lon(c,n),d);if(d[0]<=max&&d[0]<bd){bd=d[0];best=n;}}return best;}
+              public static String summary(Context c){return one(c,HOME)+" | "+one(c,HOME2)+" | "+one(c,WORK);}
+              private static String one(Context c,String n){return has(c,n)?"✓ "+n:"○ "+n;}
+          }
+          JAVA
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path("app/build.gradle")
+          s=p.read_text().replace("versionCode 21","versionCode 22").replace('versionName "1.9.11"','versionName "1.9.12"')
+          p.write_text(s)
+
+          p=Path("app/src/main/res/values/strings.xml")
+          p.write_text(p.read_text().replace("v1.9.11","v1.9.12"))
+
+          p=Path("app/src/main/res/layout/dialog_settings.xml")
+          s=p.read_text()
+          marker='    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center" android:text="@string/v19_note"'
+          garage='''    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="10dp" android:layout_marginBottom="8dp" android:background="@color/muted2" />
+              <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Garajes y parking" android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold" />
+              <TextView android:id="@+id/garageSummary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Casa | Casa 2 | Trabajo" android:textColor="@color/muted" android:textSize="11sp" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="42dp" android:layout_marginTop="7dp" android:orientation="horizontal">
+                <Button android:id="@+id/garageHomeButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="Casa" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+                <Space android:layout_width="5dp" android:layout_height="1dp"/>
+                <Button android:id="@+id/garageHome2Button" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="Casa 2" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+                <Space android:layout_width="5dp" android:layout_height="1dp"/>
+                <Button android:id="@+id/garageWorkButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="Trabajo" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+              </LinearLayout>
+              <Button android:id="@+id/tempParkingButton" android:layout_width="match_parent" android:layout_height="42dp" android:layout_marginTop="6dp" android:background="@drawable/bg_primary_button" android:text="Parking temporal · guardar + foto" android:textAllCaps="false" android:textColor="@color/white" android:textSize="12sp" android:textStyle="bold"/>
+          '''
+          if "garageHomeButton" not in s:
+              s=s.replace(marker,garage+marker)
+          p.write_text(s)
+
+          p=Path("app/src/main/java/com/inaki/micoche/MainActivity.java")
+          s=p.read_text()
+          needle='''        disable.setOnClickListener(v -> {
+              AutoParkingManager.stopObservation(this);'''
+          insert='''        view.findViewById(R.id.garageHomeButton).setOnClickListener(v -> setKnownGarageHere(GaragePrefs.HOME));
+              view.findViewById(R.id.garageHome2Button).setOnClickListener(v -> setKnownGarageHere(GaragePrefs.HOME2));
+              view.findViewById(R.id.garageWorkButton).setOnClickListener(v -> setKnownGarageHere(GaragePrefs.WORK));
+              view.findViewById(R.id.tempParkingButton).setOnClickListener(v -> startTemporaryParking());
+
+              disable.setOnClickListener(v -> {
+              AutoParkingManager.stopObservation(this);'''
+          if "setKnownGarageHere(GaragePrefs.HOME)" not in s:
+              s=s.replace(needle,insert)
+
+          needle2='        Button disable = view.findViewById(R.id.disableAutoParkingButton);'
+          repl2=needle2+'\n        TextView garageSummary = view.findViewById(R.id.garageSummary);\n        if (garageSummary != null) garageSummary.setText(GaragePrefs.summary(this));'
+          s=s.replace(needle2,repl2)
+
+          anchor='    private void offerGarageParking() {'
+          methods='''    private void setKnownGarageHere(String name) {
+              if (!hasLocationPermission()) {
+                  Toast.makeText(this, "Concede ubicación y vuelve a pulsar " + name, Toast.LENGTH_LONG).show();
+                  requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQ_LOCATION);
+                  return;
+              }
+              requestFreshLocation(location -> {
+                  if (location == null) { Toast.makeText(this, "No he podido obtener GPS para " + name, Toast.LENGTH_LONG).show(); return; }
+                  GaragePrefs.save(this, name, location.getLatitude(), location.getLongitude());
+                  if (currentSettingsView != null) updateSettingsView(currentSettingsView);
+                  Toast.makeText(this, name + " configurado para reconocimiento automático", Toast.LENGTH_LONG).show();
+              });
+          }
+
+              private void startTemporaryParking() {
+              Location approx = bestRecentLastKnown();
+              if (approx == null) {
+                  requestFreshLocation(location -> {
+                      if (location == null) { Toast.makeText(this, "No hay una posición reciente para el parking.", Toast.LENGTH_LONG).show(); return; }
+                      pendingParkingLocation = location; pendingParkingName = "Parking temporal"; openParkingCamera();
+                  });
+                  return;
+              }
+              pendingParkingLocation = approx;
+              pendingParkingName = "Parking temporal";
+              openParkingCamera();
+          }
+
+          '''
+          if "private void setKnownGarageHere" not in s:
+              s=s.replace(anchor,methods+anchor)
+          p.write_text(s)
+
+          p=Path("app/src/main/java/com/inaki/micoche/AutoParkingManager.java")
+          s=p.read_text()
+          old='''        CarStorage.save(
+                  context,
+                  lat,
+                  lon,
+                  initialAddress,
+                  time,
+                  CarStorage.SOURCE_AUTO);'''
+          new='''        String knownGarage = GaragePrefs.nearestName(context, lat, lon, 200f);
+              if (knownGarage != null) {
+                  CarStorage.saveParking(context, lat, lon, knownGarage + " · detectado automáticamente", time, knownGarage, false, "");
+              } else {
+                  CarStorage.saveParking(context, lat, lon, "Parking temporal · ubicación aproximada", time, "Parking temporal", true, "");
+              }'''
+          if old in s:
+              s=s.replace(old,new)
+          p.write_text(s)
+          PY
+
+      - name: Apply v1.9.13 visible Parking mode
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path("app/build.gradle"); s=p.read_text()
+          s=s.replace("versionCode 22","versionCode 23").replace('versionName "1.9.12"','versionName "1.9.13"')
+          p.write_text(s)
+          p=Path("app/src/main/res/values/strings.xml"); p.write_text(p.read_text().replace("v1.9.12","v1.9.13"))
+
+          p=Path("app/src/main/res/layout/activity_main.xml"); s=p.read_text()
+          s=s.replace('android:id="@+id/shareButton"', 'android:id="@+id/parkingButton"')
+          s=s.replace('android:drawableTop="@drawable/ic_action_share"', 'android:drawableTop="@drawable/ic_location_small"')
+          s=s.replace('android:text="@string/share"', 'android:text="🅿 Parking"')
+          p.write_text(s)
+
+          p=Path("app/src/main/res/layout/widget_car.xml"); s=p.read_text()
+          marker='        <TextView\n            android:id="@+id/widgetNavigate"'
+          parking='''        <TextView
+              android:id="@+id/widgetParking"
+              android:layout_width="0dp"
+              android:layout_height="match_parent"
+              android:layout_marginStart="7dp"
+              android:layout_weight="1"
+              android:background="@drawable/bg_primary_button"
+              android:gravity="center"
+              android:text="🅿 Parking"
+              android:textColor="@color/white"
+              android:textSize="11sp"
+              android:textStyle="bold" />
+
+          '''
+          if "widgetParking" not in s: s=s.replace(marker,parking+marker)
+          p.write_text(s)
+
+          p=Path("app/src/main/java/com/inaki/micoche/MainActivity.java"); s=p.read_text()
+          s=s.replace('public static final String ACTION_SAVE_NOW = "com.inaki.micoche.SAVE_NOW";',
+                      'public static final String ACTION_SAVE_NOW = "com.inaki.micoche.SAVE_NOW";\n    public static final String ACTION_PARKING_NOW = "com.inaki.micoche.PARKING_NOW";')
+          s=s.replace('findViewById(R.id.shareButton).setOnClickListener(v -> shareCar());',
+                      'findViewById(R.id.parkingButton).setOnClickListener(v -> startParkingMode());')
+          old='''        if (ACTION_SAVE_NOW.equals(getIntent().getAction())) {
+              rootView.postDelayed(this::saveCurrentLocation, 250);
+          }'''
+          new='''        if (ACTION_SAVE_NOW.equals(getIntent().getAction())) {
+              rootView.postDelayed(this::saveCurrentLocation, 250);
+          } else if (ACTION_PARKING_NOW.equals(getIntent().getAction())) {
+              rootView.postDelayed(this::startParkingMode, 250);
+          }'''
+          s=s.replace(old,new)
+          old='''        if (ACTION_SAVE_NOW.equals(intent.getAction())) {
+              rootView.postDelayed(
+                      this::saveCurrentLocation,
+                      150);
+          }'''
+          new='''        if (ACTION_SAVE_NOW.equals(intent.getAction())) {
+              rootView.postDelayed(this::saveCurrentLocation, 150);
+          } else if (ACTION_PARKING_NOW.equals(intent.getAction())) {
+              rootView.postDelayed(this::startParkingMode, 150);
+          }'''
+          s=s.replace(old,new)
+          anchor='    private void startTemporaryParking() {'
+          mode='''    private void startParkingMode() {
+              Location approx = bestRecentLastKnown();
+              if (approx == null) {
+                  requestFreshLocation(location -> {
+                      if (location == null) {
+                          Toast.makeText(this, "Modo Parking activo. Esperando GPS; vuelve a pulsar Parking cuando quieras guardar la referencia.", Toast.LENGTH_LONG).show();
+                          return;
+                      }
+                      beginParkingWithReference(location);
+                  });
+              } else beginParkingWithReference(approx);
+          }
+
+              private void beginParkingWithReference(Location location) {
+              String known = GaragePrefs.nearestName(this, location.getLatitude(), location.getLongitude(), 200f);
+              pendingParkingLocation = location;
+              pendingParkingName = known == null ? "Parking temporal" : known;
+              if (known != null) {
+                  CarStorage.saveParking(this, location.getLatitude(), location.getLongitude(),
+                          known + " · ubicación aproximada", System.currentTimeMillis(), known, true, "");
+                  refreshUi(); CarWidgetProvider.updateAll(this);
+                  Toast.makeText(this, "🅿 " + known + " detectado. Esperando GPS preciso.", Toast.LENGTH_LONG).show();
+              } else {
+                  CarStorage.saveParking(this, location.getLatitude(), location.getLongitude(),
+                          "Parking temporal · ubicación aproximada · esperando GPS preciso",
+                          System.currentTimeMillis(), "Parking temporal", true, "");
+                  refreshUi(); CarWidgetProvider.updateAll(this);
+                  Toast.makeText(this, "🅿 Parking activo · haz la foto de la plaza.", Toast.LENGTH_LONG).show();
+                  openParkingCamera();
+              }
+          }
+
+          '''
+          if "private void startParkingMode()" not in s: s=s.replace(anchor,mode+anchor)
+          p.write_text(s)
+
+          p=Path("app/src/main/java/com/inaki/micoche/CarWidgetProvider.java"); s=p.read_text()
+          needle='        views.setOnClickPendingIntent(R.id.widgetSave, savePending);'
+          add='''        views.setOnClickPendingIntent(R.id.widgetSave, savePending);
+
+              Intent parkingIntent = new Intent(context, MainActivity.class);
+              parkingIntent.setAction(MainActivity.ACTION_PARKING_NOW);
+              parkingIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+              PendingIntent parkingPending = PendingIntent.getActivity(
+                      context, appWidgetId * 100 + 3, parkingIntent,
+                      PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+              views.setOnClickPendingIntent(R.id.widgetParking, parkingPending);'''
+          if "widgetParking, parkingPending" not in s: s=s.replace(needle,add)
+          p.write_text(s)
+          PY
+
+      - name: Apply v1.9.15 final code
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64
+          p=Path("app/build.gradle")
+          s=p.read_text().replace("versionCode 23","versionCode 25").replace('versionName "1.9.13"','versionName "1.9.15"')
+          p.write_text(s)
+          p=Path("app/src/main/res/values/strings.xml")
+          p.write_text(p.read_text().replace("v1.9.13","v1.9.15"))
+          Path("app/src/main/java/com/inaki/micoche/AutoParkingManager.java").write_bytes(base64.b64decode("cGFja2FnZSBjb20uaW5ha2kubWljb2NoZTsKCmltcG9ydCBhbmRyb2lkLk1hbmlmZXN0OwppbXBvcnQgYW5kcm9pZC5hcHAuTm90aWZpY2F0aW9uQ2hhbm5lbDsKaW1wb3J0IGFuZHJvaWQuYXBwLk5vdGlmaWNhdGlvbk1hbmFnZXI7CmltcG9ydCBhbmRyb2lkLmFwcC5QZW5kaW5nSW50ZW50OwppbXBvcnQgYW5kcm9pZC5jb21wYW5pb24uQ29tcGFuaW9uRGV2aWNlTWFuYWdlcjsKaW1wb3J0IGFuZHJvaWQuY29udGVudC5Db250ZXh0OwppbXBvcnQgYW5kcm9pZC5jb250ZW50LkludGVudDsKaW1wb3J0IGFuZHJvaWQuY29udGVudC5wbS5QYWNrYWdlTWFuYWdlcjsKaW1wb3J0IGFuZHJvaWQubG9jYXRpb24uQWRkcmVzczsKaW1wb3J0IGFuZHJvaWQubG9jYXRpb24uR2VvY29kZXI7CmltcG9ydCBhbmRyb2lkLmxvY2F0aW9uLkxvY2F0aW9uOwppbXBvcnQgYW5kcm9pZC5sb2NhdGlvbi5Mb2NhdGlvbkxpc3RlbmVyOwppbXBvcnQgYW5kcm9pZC5sb2NhdGlvbi5Mb2NhdGlvbk1hbmFnZXI7CmltcG9ydCBhbmRyb2lkLm9zLkJ1aWxkOwppbXBvcnQgYW5kcm9pZC5vcy5CdW5kbGU7CmltcG9ydCBhbmRyb2lkLm9zLkhhbmRsZXI7CmltcG9ydCBhbmRyb2lkLm9zLkxvb3BlcjsKCmltcG9ydCBqYXZhLmlvLklPRXhjZXB0aW9uOwppbXBvcnQgamF2YS51dGlsLkxpc3Q7CmltcG9ydCBqYXZhLnV0aWwuTG9jYWxlOwppbXBvcnQgamF2YS51dGlsLmNvbmN1cnJlbnQuRXhlY3V0b3JTZXJ2aWNlOwppbXBvcnQgamF2YS51dGlsLmNvbmN1cnJlbnQuRXhlY3V0b3JzOwoKcHVibGljIGZpbmFsIGNsYXNzIEF1dG9QYXJraW5nTWFuYWdlciB7CiAgICBwdWJsaWMgc3RhdGljIGZpbmFsIFN0cmluZyBDSEFOTkVMX0lEPSJhdXRvX3BhcmtpbmciOwogICAgcHJpdmF0ZSBzdGF0aWMgZmluYWwgaW50IE5PVElGSUNBVElPTl9JRD0xNDAxOwogICAgcHJpdmF0ZSBBdXRvUGFya2luZ01hbmFnZXIoKXt9CgogICAgcHVibGljIHN0YXRpYyBib29sZWFuIHN1cHBvcnRlZChDb250ZXh0IGMpe3JldHVybiBCdWlsZC5WRVJTSU9OLlNES19JTlQ+PTMxICYmIGMuZ2V0UGFja2FnZU1hbmFnZXIoKS5oYXNTeXN0ZW1GZWF0dXJlKFBhY2thZ2VNYW5hZ2VyLkZFQVRVUkVfQ09NUEFOSU9OX0RFVklDRV9TRVRVUCk7fQogICAgQFN1cHByZXNzV2FybmluZ3MoImRlcHJlY2F0aW9uIikgcHVibGljIHN0YXRpYyB2b2lkIGVuc3VyZU9ic2VydmF0aW9uKENvbnRleHQgYyl7aWYoIXN1cHBvcnRlZChjKXx8IUF1dG9QYXJraW5nUHJlZnMuZW5hYmxlZChjKSlyZXR1cm47U3RyaW5nIGE9QXV0b1BhcmtpbmdQcmVmcy5hZGRyZXNzKGMpO2lmKGE9PW51bGx8fGEudHJpbSgpLmlzRW1wdHkoKSlyZXR1cm47dHJ5eygoQ29tcGFuaW9uRGV2aWNlTWFuYWdlciljLmdldFN5c3RlbVNlcnZpY2UoQ29udGV4dC5DT01QQU5JT05fREVWSUNFX1NFUlZJQ0UpKS5zdGFydE9ic2VydmluZ0RldmljZVByZXNlbmNlKGEpO31jYXRjaChFeGNlcHRpb24gaWdub3JlZCl7fX0KICAgIEBTdXBwcmVzc1dhcm5pbmdzKCJkZXByZWNhdGlvbiIpIHB1YmxpYyBzdGF0aWMgdm9pZCBzdG9wT2JzZXJ2YXRpb24oQ29udGV4dCBjKXtpZihCdWlsZC5WRVJTSU9OLlNES19JTlQ8MzEpcmV0dXJuO1N0cmluZyBhPUF1dG9QYXJraW5nUHJlZnMuYWRkcmVzcyhjKTtpZihhPT1udWxsfHxhLnRyaW0oKS5pc0VtcHR5KCkpcmV0dXJuO3RyeXsoKENvbXBhbmlvbkRldmljZU1hbmFnZXIpYy5nZXRTeXN0ZW1TZXJ2aWNlKENvbnRleHQuQ09NUEFOSU9OX0RFVklDRV9TRVJWSUNFKSkuc3RvcE9ic2VydmluZ0RldmljZVByZXNlbmNlKGEpO31jYXRjaChFeGNlcHRpb24gaWdub3JlZCl7fX0KICAgIHB1YmxpYyBzdGF0aWMgYm9vbGVhbiBoYXNGb3JlZ3JvdW5kTG9jYXRpb24oQ29udGV4dCBjKXtyZXR1cm4gYy5jaGVja1NlbGZQZXJtaXNzaW9uKE1hbmlmZXN0LnBlcm1pc3Npb24uQUNDRVNTX0ZJTkVfTE9DQVRJT04pPT1QYWNrYWdlTWFuYWdlci5QRVJNSVNTSU9OX0dSQU5URUQ7fQogICAgcHVibGljIHN0YXRpYyBib29sZWFuIGhhc0JhY2tncm91bmRMb2NhdGlvbihDb250ZXh0IGMpe3JldHVybiBCdWlsZC5WRVJTSU9OLlNES19JTlQ8Mjk/aGFzRm9yZWdyb3VuZExvY2F0aW9uKGMpOmMuY2hlY2tTZWxmUGVybWlzc2lvbihNYW5pZmVzdC5wZXJtaXNzaW9uLkFDQ0VTU19CQUNLR1JPVU5EX0xPQ0FUSU9OKT09UGFja2FnZU1hbmFnZXIuUEVSTUlTU0lPTl9HUkFOVEVEO30KCiAgICBwdWJsaWMgc3RhdGljIHZvaWQgc2F2ZUF1dG9tYXRpY1BhcmtpbmcoQ29udGV4dCBjLGJvb2xlYW4gdGVzdE1vZGUpewogICAgICAgIGlmKCF0ZXN0TW9kZSYmIUF1dG9QYXJraW5nUHJlZnMuZW5hYmxlZChjKSlyZXR1cm47CiAgICAgICAgaWYoIWhhc0ZvcmVncm91bmRMb2NhdGlvbihjKXx8IWhhc0JhY2tncm91bmRMb2NhdGlvbihjKSl7QXV0b1BhcmtpbmdQcmVmcy5zZXRMYXN0RXZlbnQoYywiTm8gc2UgZ3VhcmTDszogZmFsdGEgcGVybWl0aXIgdWJpY2FjacOzbiB0b2RvIGVsIHRpZW1wby4iKTtub3RpZnlTdGF0dXMoYywiTm8gcHVkZSBndWFyZGFyIGVsIGNvY2hlIiwiQWN0aXZhIMKrUGVybWl0aXIgc2llbXByZcK7IHBhcmEgbGEgdWJpY2FjacOzbi4iKTtyZXR1cm47fQogICAgICAgIGlmKCF0ZXN0TW9kZSYmQXV0b1BhcmtpbmdQcmVmcy5yZWNlbnRseUF1dG9TYXZlZChjKSlyZXR1cm47CiAgICAgICAgTG9jYXRpb25NYW5hZ2VyIGxtPShMb2NhdGlvbk1hbmFnZXIpYy5nZXRTeXN0ZW1TZXJ2aWNlKENvbnRleHQuTE9DQVRJT05fU0VSVklDRSk7CiAgICAgICAgd2FpdEZvclByZWNpc2VHcHMoYyxsbSx0ZXN0TW9kZSk7CiAgICB9CgogICAgcHJpdmF0ZSBzdGF0aWMgdm9pZCB3YWl0Rm9yUHJlY2lzZUdwcyhDb250ZXh0IGMsTG9jYXRpb25NYW5hZ2VyIGxtLGJvb2xlYW4gdGVzdE1vZGUpewogICAgICAgIGZpbmFsIGxvbmcgc3RhcnRlZD1TeXN0ZW0uY3VycmVudFRpbWVNaWxsaXMoKTsgZmluYWwgTG9jYXRpb25bXSBiZXN0PXtudWxsfTsgZmluYWwgYm9vbGVhbltdIGRvbmU9e2ZhbHNlfTsKICAgICAgICBmaW5hbCBIYW5kbGVyIGg9bmV3IEhhbmRsZXIoTG9vcGVyLmdldE1haW5Mb29wZXIoKSk7IGZpbmFsIExvY2F0aW9uTGlzdGVuZXJbXSByZWY9bmV3IExvY2F0aW9uTGlzdGVuZXJbMV07CiAgICAgICAgcmVmWzBdPW5ldyBMb2NhdGlvbkxpc3RlbmVyKCl7CiAgICAgICAgICAgIEBPdmVycmlkZSBwdWJsaWMgdm9pZCBvbkxvY2F0aW9uQ2hhbmdlZChMb2NhdGlvbiBsKXsKICAgICAgICAgICAgICAgIGlmKGRvbmVbMF18fGw9PW51bGx8fGwuZ2V0VGltZSgpPHN0YXJ0ZWQtMjAwMEx8fCFsLmhhc0FjY3VyYWN5KCkpcmV0dXJuOwogICAgICAgICAgICAgICAgaWYoYmVzdFswXT09bnVsbHx8bC5nZXRBY2N1cmFjeSgpPGJlc3RbMF0uZ2V0QWNjdXJhY3koKSliZXN0WzBdPWw7CiAgICAgICAgICAgICAgICBpZihsLmdldEFjY3VyYWN5KCk8PTIwZil7ZG9uZVswXT10cnVlO3RyeXtsbS5yZW1vdmVVcGRhdGVzKHJlZlswXSk7fWNhdGNoKEV4Y2VwdGlvbiBpZ25vcmVkKXt9IHNhdmVMb2NhdGlvbihjLGwsdGVzdE1vZGUpO30KICAgICAgICAgICAgfQogICAgICAgICAgICBAT3ZlcnJpZGUgcHVibGljIHZvaWQgb25TdGF0dXNDaGFuZ2VkKFN0cmluZyBwLGludCBzdCxCdW5kbGUgZSl7fQogICAgICAgICAgICBAT3ZlcnJpZGUgcHVibGljIHZvaWQgb25Qcm92aWRlckVuYWJsZWQoU3RyaW5nIHApe30KICAgICAgICAgICAgQE92ZXJyaWRlIHB1YmxpYyB2b2lkIG9uUHJvdmlkZXJEaXNhYmxlZChTdHJpbmcgcCl7fQogICAgICAgIH07CiAgICAgICAgQXV0b1BhcmtpbmdQcmVmcy5zZXRMYXN0RXZlbnQoYywiQmx1ZXRvb3RoIGRlc2NvbmVjdGFkbzogYnVzY2FuZG8gR1BTIHByZWNpc28uLi4iKTsKICAgICAgICB0cnl7CiAgICAgICAgICAgIGlmKGxtLmlzUHJvdmlkZXJFbmFibGVkKExvY2F0aW9uTWFuYWdlci5HUFNfUFJPVklERVIpKWxtLnJlcXVlc3RMb2NhdGlvblVwZGF0ZXMoTG9jYXRpb25NYW5hZ2VyLkdQU19QUk9WSURFUiwxMDAwTCwwZixyZWZbMF0sTG9vcGVyLmdldE1haW5Mb29wZXIoKSk7CiAgICAgICAgICAgIGlmKGxtLmlzUHJvdmlkZXJFbmFibGVkKExvY2F0aW9uTWFuYWdlci5ORVRXT1JLX1BST1ZJREVSKSlsbS5yZXF1ZXN0TG9jYXRpb25VcGRhdGVzKExvY2F0aW9uTWFuYWdlci5ORVRXT1JLX1BST1ZJREVSLDEwMDBMLDBmLHJlZlswXSxMb29wZXIuZ2V0TWFpbkxvb3BlcigpKTsKICAgICAgICB9Y2F0Y2goU2VjdXJpdHlFeGNlcHRpb24gZSl7cmV0dXJuO30KICAgICAgICBoLnBvc3REZWxheWVkKCgpLT57aWYoZG9uZVswXSlyZXR1cm47ZG9uZVswXT10cnVlO3RyeXtsbS5yZW1vdmVVcGRhdGVzKHJlZlswXSk7fWNhdGNoKEV4Y2VwdGlvbiBpZ25vcmVkKXt9TG9jYXRpb24gbD1iZXN0WzBdO2lmKGwhPW51bGwmJmwuaGFzQWNjdXJhY3koKSYmbC5nZXRBY2N1cmFjeSgpPD0zNWYpc2F2ZUxvY2F0aW9uKGMsbCx0ZXN0TW9kZSk7ZWxzZSBBdXRvUGFya2luZ1ByZWZzLnNldExhc3RFdmVudChjLCJCbHVldG9vdGggZGVzY29uZWN0YWRvOiBlc3BlcmFuZG8gR1BTIHByZWNpc28uIFVzYSBQYXJraW5nIHNpIGVzdMOhcyBiYWpvIHRlY2hvLiIpO30sNjAwMDBMKTsKICAgIH0KCiAgICBwcml2YXRlIHN0YXRpYyB2b2lkIHNhdmVMb2NhdGlvbihDb250ZXh0IGMsTG9jYXRpb24gbCxib29sZWFuIHRlc3RNb2RlKXsKICAgICAgICBkb3VibGUgbGF0PWwuZ2V0TGF0aXR1ZGUoKSxsb249bC5nZXRMb25naXR1ZGUoKTtsb25nIHRpbWU9U3lzdGVtLmN1cnJlbnRUaW1lTWlsbGlzKCk7CiAgICAgICAgU3RyaW5nIGluaXRpYWw9U3RyaW5nLmZvcm1hdChMb2NhbGUuVVMsIiUuNmYsICUuNmYiLGxhdCxsb24pOwogICAgICAgIFN0cmluZyBnYXJhZ2U9R2FyYWdlUHJlZnMubmVhcmVzdE5hbWUoYyxsYXQsbG9uLDEwMGYpOwogICAgICAgIGlmKGdhcmFnZSE9bnVsbClDYXJTdG9yYWdlLnNhdmVQYXJraW5nKGMsbGF0LGxvbixnYXJhZ2UrIiDCtyBHUFMgcHJlY2lzbyIsdGltZSxnYXJhZ2UsZmFsc2UsIiIpOwogICAgICAgIGVsc2UgQ2FyU3RvcmFnZS5zYXZlKGMsbGF0LGxvbixpbml0aWFsLHRpbWUsQ2FyU3RvcmFnZS5TT1VSQ0VfQVVUTyk7CiAgICAgICAgQXV0b1BhcmtpbmdQcmVmcy5tYXJrQXV0b1NhdmVkKGMpOwogICAgICAgIEF1dG9QYXJraW5nUHJlZnMuc2V0TGFzdEV2ZW50KGMsdGVzdE1vZGU/IlBydWViYSBjb3JyZWN0YTogR1BTIHByZWNpc28gZ3VhcmRhZG8uIjoiQmx1ZXRvb3RoIGRlc2NvbmVjdGFkbzogY29jaGUgZ3VhcmRhZG8gY29uIEdQUyBwcmVjaXNvLiIpOwogICAgICAgIENhcldpZGdldFByb3ZpZGVyLnVwZGF0ZUFsbChjKTsKICAgICAgICBub3RpZnlTdGF0dXMoYyx0ZXN0TW9kZT8iUHJ1ZWJhIGRlIGFwYXJjYW1pZW50byBhdXRvbcOhdGljbyI6IkNvY2hlIGd1YXJkYWRvIGF1dG9tw6F0aWNhbWVudGUiLGdhcmFnZSE9bnVsbD9nYXJhZ2UrIiDCtyBHUFMgcHJlY2lzbyI6IlBvc2ljacOzbiBHUFMgcHJlY2lzYSBndWFyZGFkYS4iKTsKICAgICAgICByZXZlcnNlR2VvY29kZShjLmdldEFwcGxpY2F0aW9uQ29udGV4dCgpLGxhdCxsb24sdGltZSxnYXJhZ2UpOwogICAgfQoKICAgIHByaXZhdGUgc3RhdGljIHZvaWQgcmV2ZXJzZUdlb2NvZGUoQ29udGV4dCBjLGRvdWJsZSBsYXQsZG91YmxlIGxvbixsb25nIHRpbWUsU3RyaW5nIGdhcmFnZSl7CiAgICAgICAgRXhlY3V0b3JTZXJ2aWNlIGV4PUV4ZWN1dG9ycy5uZXdTaW5nbGVUaHJlYWRFeGVjdXRvcigpO2V4LmV4ZWN1dGUoKCktPnt0cnl7R2VvY29kZXIgZz1uZXcgR2VvY29kZXIoYyxuZXcgTG9jYWxlKCJlcyIsIkVTIikpO0xpc3Q8QWRkcmVzcz4gbGlzdD1nLmdldEZyb21Mb2NhdGlvbihsYXQsbG9uLDEpO2lmKGxpc3QhPW51bGwmJiFsaXN0LmlzRW1wdHkoKSl7QWRkcmVzcyBhPWxpc3QuZ2V0KDApO1N0cmluZ0J1aWxkZXIgc2I9bmV3IFN0cmluZ0J1aWxkZXIoKTtmb3IoaW50IGk9MDtpPD1hLmdldE1heEFkZHJlc3NMaW5lSW5kZXgoKTtpKyspe2lmKGk+MClzYi5hcHBlbmQoIiwgIik7c2IuYXBwZW5kKGEuZ2V0QWRkcmVzc0xpbmUoaSkpO31TdHJpbmcgYWQ9c2IudG9TdHJpbmcoKS50cmltKCk7aWYoIWFkLmlzRW1wdHkoKSYmZ2FyYWdlPT1udWxsKXtDYXJTdG9yYWdlLnNhdmUoYyxsYXQsbG9uLGFkLHRpbWUsQ2FyU3RvcmFnZS5TT1VSQ0VfQVVUTyk7Q2FyV2lkZ2V0UHJvdmlkZXIudXBkYXRlQWxsKGMpO319fWNhdGNoKElPRXhjZXB0aW9ufElsbGVnYWxBcmd1bWVudEV4Y2VwdGlvbiBpZ25vcmVkKXt9ZmluYWxseXtleC5zaHV0ZG93bigpO319KTsKICAgIH0KCiAgICBwdWJsaWMgc3RhdGljIHZvaWQgY3JlYXRlTm90aWZpY2F0aW9uQ2hhbm5lbChDb250ZXh0IGMpe2lmKEJ1aWxkLlZFUlNJT04uU0RLX0lOVD49MjYpe05vdGlmaWNhdGlvbk1hbmFnZXIgbT0oTm90aWZpY2F0aW9uTWFuYWdlciljLmdldFN5c3RlbVNlcnZpY2UoQ29udGV4dC5OT1RJRklDQVRJT05fU0VSVklDRSk7Tm90aWZpY2F0aW9uQ2hhbm5lbCBjaD1uZXcgTm90aWZpY2F0aW9uQ2hhbm5lbChDSEFOTkVMX0lELGMuZ2V0U3RyaW5nKFIuc3RyaW5nLmF1dG9fY2hhbm5lbCksTm90aWZpY2F0aW9uTWFuYWdlci5JTVBPUlRBTkNFX0RFRkFVTFQpO2NoLnNldERlc2NyaXB0aW9uKGMuZ2V0U3RyaW5nKFIuc3RyaW5nLmF1dG9fY2hhbm5lbF9kZXNjKSk7bS5jcmVhdGVOb3RpZmljYXRpb25DaGFubmVsKGNoKTt9fQogICAgcHJpdmF0ZSBzdGF0aWMgdm9pZCBub3RpZnlTdGF0dXMoQ29udGV4dCBjLFN0cmluZyB0aXRsZSxTdHJpbmcgdGV4dCl7Y3JlYXRlTm90aWZpY2F0aW9uQ2hhbm5lbChjKTtpZihCdWlsZC5WRVJTSU9OLlNES19JTlQ+PTMzJiZjLmNoZWNrU2VsZlBlcm1pc3Npb24oTWFuaWZlc3QucGVybWlzc2lvbi5QT1NUX05PVElGSUNBVElPTlMpIT1QYWNrYWdlTWFuYWdlci5QRVJNSVNTSU9OX0dSQU5URUQpcmV0dXJuO0ludGVudCBvcGVuPW5ldyBJbnRlbnQoYyxNYWluQWN0aXZpdHkuY2xhc3MpO1BlbmRpbmdJbnRlbnQgcGk9UGVuZGluZ0ludGVudC5nZXRBY3Rpdml0eShjLDE0MDEsb3BlbixQZW5kaW5nSW50ZW50LkZMQUdfVVBEQVRFX0NVUlJFTlR8UGVuZGluZ0ludGVudC5GTEFHX0lNTVVUQUJMRSk7YW5kcm9pZC5hcHAuTm90aWZpY2F0aW9uLkJ1aWxkZXIgYj1CdWlsZC5WRVJTSU9OLlNES19JTlQ+PTI2P25ldyBhbmRyb2lkLmFwcC5Ob3RpZmljYXRpb24uQnVpbGRlcihjLENIQU5ORUxfSUQpOm5ldyBhbmRyb2lkLmFwcC5Ob3RpZmljYXRpb24uQnVpbGRlcihjKTtiLnNldFNtYWxsSWNvbihSLmRyYXdhYmxlLmljX2Nhcl90b3ApLnNldENvbnRlbnRUaXRsZSh0aXRsZSkuc2V0Q29udGVudFRleHQodGV4dCkuc2V0QXV0b0NhbmNlbCh0cnVlKS5zZXRDb250ZW50SW50ZW50KHBpKTsoKE5vdGlmaWNhdGlvbk1hbmFnZXIpYy5nZXRTeXN0ZW1TZXJ2aWNlKENvbnRleHQuTk9USUZJQ0FUSU9OX1NFUlZJQ0UpKS5ub3RpZnkoTk9USUZJQ0FUSU9OX0lELGIuYnVpbGQoKSk7fQp9"))
+          p=Path("app/src/main/java/com/inaki/micoche/MainActivity.java")
+          s=p.read_text().replace("GaragePrefs.nearestName(this, location.getLatitude(), location.getLongitude(), 200f)","GaragePrefs.nearestName(this, location.getLatitude(), location.getLongitude(), 100f)")
+          p.write_text(s)
+          PY
+
+
+      - name: Apply v1.9.16 disconnect reliability
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("app/build.gradle")
+          x=p.read_text().replace("versionCode 25","versionCode 26").replace('versionName "1.9.15"','versionName "1.9.16"')
+          p.write_text(x)
+          p=Path("app/src/main/res/values/strings.xml")
+          p.write_text(p.read_text().replace("v1.9.15","v1.9.16").replace("1.0.11","1.9.16"))
+          p=Path("app/src/main/java/com/inaki/micoche/AutoParkingManager.java")
+          x=p.read_text().replace('if(!testMode&&AutoParkingPrefs.recentlyAutoSaved(c))return;','')
+          old='if(l!=null&&l.hasAccuracy()&&l.getAccuracy()<=35f)saveLocation(c,l,testMode);else AutoParkingPrefs.setLastEvent(c,"Bluetooth desconectado: esperando GPS preciso. Usa Parking si estás bajo techo.");'
+          new='if(l!=null&&l.hasAccuracy()&&l.getAccuracy()<=35f)saveLocation(c,l,testMode);else if(l!=null)saveApproximate(c,l);else AutoParkingPrefs.setLastEvent(c,"Bluetooth desconectado: aparcamiento pendiente, sin GPS. Usa Parking si estás bajo techo.");'
+          x=x.replace(old,new)
+          marker='    private static void saveLocation(Context c,Location l,boolean testMode){'
+          method='    private static void saveApproximate(Context c, Location l) {\n        double lat=l.getLatitude(), lon=l.getLongitude(); long time=System.currentTimeMillis();\n        String garage=GaragePrefs.nearestName(c,lat,lon,100f);\n        String name=garage==null ? "Parking temporal" : garage;\n        CarStorage.saveParking(c,lat,lon,name+" · ubicación aproximada",time,name,true,"");\n        AutoParkingPrefs.markAutoSaved(c);\n        AutoParkingPrefs.setLastEvent(c,"Bluetooth desconectado: coche guardado con GPS aproximado; pendiente de mejorar.");\n        CarWidgetProvider.updateAll(c);\n        notifyStatus(c,"Coche guardado automáticamente",name+" · ubicación aproximada");\n    }\n\n'
+          if 'private static void saveApproximate' not in x: x=x.replace(marker,method+marker)
+          p.write_text(x)
+          PY
+
+      - name: Build APK
+        run: gradle :app:assembleDebug --stacktrace
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk WhereIsMyCar-v1.9.16.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WhereIsMyCar-v1.9.16-APK
+          path: WhereIsMyCar-v1.9.16.apk
+          if-no-files-found: error
+          retention-days: 30
