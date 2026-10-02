@@ -1,66 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/settingsRoot"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/bg"
-    android:orientation="vertical"
-    android:paddingStart="18dp"
-    android:paddingTop="10dp"
-    android:paddingEnd="18dp"
-    android:paddingBottom="10dp">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+ android:id="@+id/settingsRoot" android:layout_width="match_parent" android:layout_height="match_parent"
+ android:background="@color/bg" android:fillViewport="true">
+ <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+  android:paddingStart="18dp" android:paddingEnd="18dp" android:paddingTop="10dp" android:paddingBottom="24dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-        <TextView android:id="@+id/settingsBackButton" android:layout_width="46dp" android:layout_height="46dp" android:gravity="center" android:text="‹" android:textColor="@color/white" android:textSize="36sp" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/customize_car_v19" android:textColor="@color/white" android:textSize="21sp" android:textStyle="bold" />
-    </LinearLayout>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="50dp" android:gravity="center_vertical">
+   <TextView android:id="@+id/settingsBackButton" android:layout_width="46dp" android:layout_height="46dp" android:gravity="center" android:text="‹" android:textColor="@color/white" android:textSize="36sp"/>
+   <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Where Is My Car" android:textColor="@color/white" android:textSize="21sp" android:textStyle="bold"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GAIKA · PERSONALIZA TU COCHE" android:textColor="@color/orange" android:textSize="10sp" android:textStyle="bold"/>
+   </LinearLayout>
+  </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="132dp"
-        android:layout_marginTop="4dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-        <ImageView
-            android:id="@+id/carPreview"
-            android:layout_width="105dp"
-            android:layout_height="132dp"
-            android:contentDescription="@string/car_preview"
-            android:scaleType="fitCenter" />
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="14dp"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="vertical">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/car_model" android:textColor="@color/muted" android:textSize="12sp" />
-            <Spinner android:id="@+id/carModelSpinner" android:layout_width="match_parent" android:layout_height="44dp" android:background="@drawable/bg_ghost_button" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/car_color" android:textColor="@color/muted" android:textSize="12sp" />
-            <Spinner android:id="@+id/carColorSpinner" android:layout_width="match_parent" android:layout_height="44dp" android:background="@drawable/bg_ghost_button" />
-        </LinearLayout>
-    </LinearLayout>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Elige tu coche" android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold"/>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Así aparecerá sobre el mapa" android:textColor="@color/muted" android:textSize="12sp"/>
+  <ImageView android:id="@+id/carPreview" android:layout_width="match_parent" android:layout_height="150dp" android:layout_marginTop="8dp" android:scaleType="fitCenter"/>
 
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="10dp" android:background="@color/muted2" />
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/auto_parking" android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold" />
-    <TextView android:id="@+id/autoStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="@string/disabled" android:textColor="@color/orange" android:textSize="14sp" android:textStyle="bold" />
-    <TextView android:id="@+id/autoDevice" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:maxLines="1" android:ellipsize="end" android:text="@string/bt_not_configured" android:textColor="@color/muted" android:textSize="12sp" />
-    <TextView android:id="@+id/autoPermission" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:maxLines="1" android:ellipsize="end" android:text="@string/auto_location_pending" android:textColor="@color/muted" android:textSize="12sp" />
-    <TextView android:id="@+id/autoLastEvent" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:maxLines="1" android:ellipsize="end" android:text="@string/no_events" android:textColor="@color/muted2" android:textSize="11sp" />
+  <LinearLayout android:layout_width="match_parent" android:layout_height="112dp" android:orientation="horizontal">
+   <Button android:id="@+id/carChoice0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="🪵&#10;Troncomóvil" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+   <Space android:layout_width="6dp" android:layout_height="1dp"/>
+   <Button android:id="@+id/carChoice1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="🍭&#10;Candy Car" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+   <Space android:layout_width="6dp" android:layout_height="1dp"/>
+   <Button android:id="@+id/carChoice2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="☁️&#10;Cloud Car" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+  </LinearLayout>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="112dp" android:layout_marginTop="6dp" android:orientation="horizontal">
+   <Button android:id="@+id/carChoice3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="🛸&#10;Space Car" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+   <Space android:layout_width="6dp" android:layout_height="1dp"/>
+   <Button android:id="@+id/carChoice4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="🫧&#10;Bubble Car" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+   <Space android:layout_width="6dp" android:layout_height="1dp"/>
+   <Button android:id="@+id/carChoice5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="📦&#10;Cardboard Car" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+  </LinearLayout>
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="9dp" android:orientation="horizontal">
-        <Button android:id="@+id/configureCarBluetoothButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_primary_button" android:text="@string/configure_bt_short" android:textAllCaps="false" android:textColor="@color/white" android:textSize="12sp" android:textStyle="bold" />
-        <Space android:layout_width="7dp" android:layout_height="1dp" />
-        <Button android:id="@+id/autoPermissionsButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="@string/auto_permissions_short" android:textAllCaps="false" android:textColor="@color/orange" android:textSize="12sp" />
-    </LinearLayout>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="42dp" android:layout_marginTop="6dp" android:orientation="horizontal">
-        <Button android:id="@+id/testAutoParkingButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="@string/test_auto_short" android:textAllCaps="false" android:textColor="@color/white" android:textSize="12sp" />
-        <Space android:layout_width="7dp" android:layout_height="1dp" />
-        <Button android:id="@+id/disableAutoParkingButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="@string/disable_auto_short" android:textAllCaps="false" android:textColor="@color/danger" android:textSize="12sp" />
-    </LinearLayout>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center" android:text="@string/v19_note" android:textColor="@color/muted2" android:textSize="10sp" />
-</LinearLayout>
+  <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="14dp" android:layout_marginBottom="12dp" android:background="@color/muted2"/>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Garajes" android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold"/>
+  <TextView android:id="@+id/garageSummary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="🏠 Casa · 🏠 Casa 2 · 💼 Trabajo" android:textColor="@color/muted" android:textSize="12sp"/>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Toca para guardar esta ubicación como garaje" android:textColor="@color/muted2" android:textSize="11sp"/>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:orientation="horizontal">
+   <Button android:id="@+id/garageHomeButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="🏠 Casa" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+   <Space android:layout_width="6dp" android:layout_height="1dp"/>
+   <Button android:id="@+id/garageHome2Button" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="🏠 Casa 2" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+   <Space android:layout_width="6dp" android:layout_height="1dp"/>
+   <Button android:id="@+id/garageWorkButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="💼 Trabajo" android:textAllCaps="false" android:textColor="@color/white" android:textSize="11sp"/>
+  </LinearLayout>
+  <Button android:id="@+id/tempParkingButton" android:layout_width="match_parent" android:layout_height="46dp" android:layout_marginTop="7dp" android:background="@drawable/bg_primary_button" android:text="🅿 Parking temporal · guardar + foto" android:textAllCaps="false" android:textColor="@color/white" android:textStyle="bold"/>
+
+  <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="14dp" android:layout_marginBottom="12dp" android:background="@color/muted2"/>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/auto_parking" android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold"/>
+  <TextView android:id="@+id/autoStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="@string/disabled" android:textColor="@color/orange" android:textStyle="bold"/>
+  <TextView android:id="@+id/autoDevice" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/bt_not_configured" android:textColor="@color/muted" android:textSize="12sp"/>
+  <TextView android:id="@+id/autoPermission" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/auto_location_pending" android:textColor="@color/muted" android:textSize="12sp"/>
+  <TextView android:id="@+id/autoLastEvent" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/no_events" android:textColor="@color/muted2" android:textSize="11sp"/>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="46dp" android:layout_marginTop="9dp" android:orientation="horizontal">
+   <Button android:id="@+id/configureCarBluetoothButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_primary_button" android:text="@string/configure_bt_short" android:textAllCaps="false" android:textColor="@color/white" android:textStyle="bold"/>
+   <Space android:layout_width="7dp" android:layout_height="1dp"/>
+   <Button android:id="@+id/autoPermissionsButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="@string/auto_permissions_short" android:textAllCaps="false" android:textColor="@color/orange"/>
+  </LinearLayout>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="6dp" android:orientation="horizontal">
+   <Button android:id="@+id/testAutoParkingButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="@string/test_auto_short" android:textAllCaps="false" android:textColor="@color/white"/>
+   <Space android:layout_width="7dp" android:layout_height="1dp"/>
+   <Button android:id="@+id/disableAutoParkingButton" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/bg_ghost_button" android:text="@string/disable_auto_short" android:textAllCaps="false" android:textColor="@color/danger"/>
+  </LinearLayout>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:gravity="center" android:text="Where Is My Car · v1.9.18 · GAIKA" android:textColor="@color/muted2" android:textSize="10sp"/>
+ </LinearLayout>
+</ScrollView>
