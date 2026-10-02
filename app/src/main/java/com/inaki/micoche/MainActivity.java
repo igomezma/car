@@ -24,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -304,6 +305,7 @@ public class MainActivity extends Activity {
 
         updateSettingsView(view);
         configureCarAppearance(view);
+        configureGarages(view);
 
         Button carBluetooth = view.findViewById(R.id.configureCarBluetoothButton);
         Button permissions = view.findViewById(R.id.autoPermissionsButton);
@@ -374,10 +376,73 @@ public class MainActivity extends Activity {
     }
 
     private void configureCarAppearance(View view) {
-        ImageView preview=view.findViewById(R.id.carPreview);
-        int[] ids={R.id.carChoice0,R.id.carChoice1,R.id.carChoice2,R.id.carChoice3,R.id.carChoice4,R.id.carChoice5};
-        preview.setImageBitmap(CarAppearance.renderSide(this,dp(280),dp(160)));
-        for(int i=0;i<ids.length;i++){ final int choice=i; View b=view.findViewById(ids[i]); b.setAlpha(choice==CarAppearance.model(this)?1f:.62f); b.setOnClickListener(v->{ CarAppearance.save(MainActivity.this,choice,0); preview.setImageBitmap(CarAppearance.renderSide(MainActivity.this,dp(280),dp(160))); for(int j=0;j<ids.length;j++)view.findViewById(ids[j]).setAlpha(j==choice?1f:.62f); applyCarAppearance(); }); }
+        ImageView preview = view.findViewById(R.id.carPreview);
+        int[] ids = {R.id.carChoice0,R.id.carChoice1,R.id.carChoice2,R.id.carChoice3,R.id.carChoice4,R.id.carChoice5};
+        int[] side = {R.drawable.car_log_side,R.drawable.car_candy_side,R.drawable.car_cloud_side,R.drawable.car_space_side,R.drawable.car_bubble_side,R.drawable.car_cardboard_side};
+        for (int i=0;i<ids.length;i++) {
+            ImageButton b = view.findViewById(ids[i]);
+            b.setImageResource(side[i]);
+            final int choice=i;
+            b.setOnClickListener(v -> {
+                CarAppearance.save(MainActivity.this,choice,0);
+                preview.setImageBitmap(CarAppearance.renderSide(MainActivity.this,dp(260),dp(100)));
+                updateCarChoiceBorders(view,ids,choice);
+                applyCarAppearance();
+            });
+        }
+        preview.setImageBitmap(CarAppearance.renderSide(this,dp(260),dp(100)));
+        updateCarChoiceBorders(view,ids,CarAppearance.model(this));
+    }
+
+    private void updateCarChoiceBorders(View view, int[] ids, int selected) {
+        for (int i=0;i<ids.length;i++) {
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(getColor(R.color.panel2));
+            bg.setCornerRadius(dp(10));
+            bg.setStroke(dp(i==selected?2:1), getColor(i==selected?R.color.orange:R.color.muted2));
+            view.findViewById(ids[i]).setBackground(bg);
+            view.findViewById(ids[i]).setAlpha(i==selected?1f:.72f);
+        }
+    }
+
+    private void configureGarages(View view) {
+        bindGarage(view,"home","Casa",R.id.garageHomeLabel,R.id.garageHomeButton,R.id.garageHomeDelete);
+        bindGarage(view,"home2","Casa 2",R.id.garageHome2Label,R.id.garageHome2Button,R.id.garageHome2Delete);
+        bindGarage(view,"work","Trabajo",R.id.garageWorkLabel,R.id.garageWorkButton,R.id.garageWorkDelete);
+        Button temp=view.findViewById(R.id.tempParkingButton);
+        temp.setOnClickListener(v -> saveCurrentLocation());
+    }
+
+    private void bindGarage(View view,String key,String title,int labelId,int saveId,int deleteId) {
+        TextView label=view.findViewById(labelId);
+        Button save=view.findViewById(saveId);
+        Button delete=view.findViewById(deleteId);
+        Runnable refresh=() -> {
+            boolean has=GaragePrefs.has(this,key);
+            label.setText(has ? title+"  ✓" : title);
+            delete.setEnabled(has);
+            delete.setAlpha(has?1f:.4f);
+        };
+        save.setOnClickListener(v -> saveGaragePosition(key,title,refresh));
+        delete.setOnClickListener(v -> { GaragePrefs.clear(this,key); refresh.run(); Toast.makeText(this,title+": posición eliminada",Toast.LENGTH_SHORT).show(); });
+        refresh.run();
+    }
+
+    private void saveGaragePosition(String key,String title,Runnable refresh) {
+        if (!hasLocationPermission()) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},REQ_LOCATION);
+            Toast.makeText(this,"Concede ubicación y pulsa Guardar posición otra vez",Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (!isAnyProviderEnabled()) { Toast.makeText(this,"Activa la ubicación para guardar el garaje",Toast.LENGTH_LONG).show(); return; }
+        Toast.makeText(this,"Obteniendo ubicación precisa…",Toast.LENGTH_SHORT).show();
+        requestFreshLocation(location -> {
+            if (location==null) { Toast.makeText(this,"No he podido obtener la ubicación",Toast.LENGTH_LONG).show(); return; }
+            GaragePrefs.save(this,key,location.getLatitude(),location.getLongitude(),location.hasAccuracy()?location.getAccuracy():0f);
+            refresh.run();
+            String acc=location.hasAccuracy()?" · ±"+Math.round(location.getAccuracy())+" m":"";
+            Toast.makeText(this,title+" guardado"+acc,Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void applyCarAppearance() {
