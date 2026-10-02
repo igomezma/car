@@ -1,7 +1,11 @@
 package com.inaki.micoche;
 
 import android.content.Context;
-import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
 
 public final class CarAppearance {
 
@@ -17,6 +21,12 @@ public final class CarAppearance {
             "Cardboard Car"
     };
 
+    /*
+     * Una imagen INDEPENDIENTE para cada coche.
+     *
+     * TOP  -> imagen utilizada en el mapa.
+     * SIDE -> imagen utilizada en el selector grande.
+     */
     private static final int[] TOP = {
             R.drawable.car_log,
             R.drawable.car_candy,
@@ -35,123 +45,144 @@ public final class CarAppearance {
             R.drawable.car_cardboard_side
     };
 
-    private CarAppearance() {}
-
-    public static int model(Context c) {
-        return Math.max(0, Math.min(
-                c.getSharedPreferences(PREFS, 0).getInt(KEY_MODEL, 0), 5));
+    private CarAppearance() {
     }
 
-    public static int color(Context c) {
+    public static int model(Context context) {
+        int value = context
+                .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getInt(KEY_MODEL, 0);
+
+        return Math.max(0, Math.min(value, MODELS.length - 1));
+    }
+
+    public static int color(Context context) {
         return 0;
     }
 
-    public static void save(Context c, int m, int ignored) {
-        c.getSharedPreferences(PREFS, 0)
+    public static void save(Context context, int model, int ignored) {
+        int safeModel =
+                Math.max(0, Math.min(model, MODELS.length - 1));
+
+        context
+                .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit()
-                .putInt(KEY_MODEL, Math.max(0, Math.min(m, 5)))
+                .putInt(KEY_MODEL, safeModel)
                 .apply();
     }
 
-    private static Bitmap draw(Context c, int[] res, int w, int h) {
-
-        Bitmap src = BitmapFactory.decodeResource(
-                c.getResources(), res[model(c)]);
-
-        Bitmap out = Bitmap.createBitmap(
-                w, h, Bitmap.Config.ARGB_8888);
-
-        if (src == null) return out;
-
-        Canvas cv = new Canvas(out);
-
-        Paint p = new Paint(
-                Paint.ANTI_ALIAS_FLAG |
-                Paint.FILTER_BITMAP_FLAG);
-
-        float k = Math.min(
-                w * .96f / src.getWidth(),
-                h * .96f / src.getHeight());
-
-        float dw = src.getWidth() * k;
-        float dh = src.getHeight() * k;
-
-        cv.drawBitmap(
-                src,
-                null,
-                new RectF(
-                        (w - dw) / 2f,
-                        (h - dh) / 2f,
-                        (w + dw) / 2f,
-                        (h + dh) / 2f),
-                p);
-
-        return out;
-    }
-
-    /*
-     * Vista lateral del coche.
+    /**
+     * Dibuja UN PNG completo dentro del bitmap final.
      *
-     * Las imágenes originales tienen pequeños restos gráficos
-     * en los extremos superior e inferior. Recortamos esas zonas
-     * antes de escalar para que únicamente aparezca el coche
-     * seleccionado.
+     * IMPORTANTE:
+     * - No recorta la imagen.
+     * - No usa cropTop/cropBottom.
+     * - Conserva la relación de aspecto.
+     * - Centra el coche.
+     * - Deja un pequeño margen de seguridad.
      */
-    private static Bitmap drawSide(Context c, int w, int h) {
+    private static Bitmap drawFull(
+            Context context,
+            int resourceId,
+            int width,
+            int height) {
 
-        Bitmap src = BitmapFactory.decodeResource(
-                c.getResources(), SIDE[model(c)]);
+        Bitmap source = BitmapFactory.decodeResource(
+                context.getResources(),
+                resourceId
+        );
 
-        Bitmap out = Bitmap.createBitmap(
-                w, h, Bitmap.Config.ARGB_8888);
+        Bitmap result = Bitmap.createBitmap(
+                width,
+                height,
+                Bitmap.Config.ARGB_8888
+        );
 
-        if (src == null) return out;
+        if (source == null) {
+            return result;
+        }
 
-        Canvas cv = new Canvas(out);
+        Canvas canvas = new Canvas(result);
 
-        Paint p = new Paint(
+        Paint paint = new Paint(
                 Paint.ANTI_ALIAS_FLAG |
-                Paint.FILTER_BITMAP_FLAG);
+                Paint.FILTER_BITMAP_FLAG |
+                Paint.DITHER_FLAG
+        );
 
-        // Margen de seguridad:
-        // 18 % arriba y 14 % abajo.
-        int cropTop =
-                Math.round(src.getHeight() * .18f);
+        /*
+         * 92 % del espacio disponible.
+         *
+         * El coche entra SIEMPRE entero.
+         * No se corta ni arriba, ni abajo,
+         * ni a izquierda ni a derecha.
+         */
+        float availableWidth = width * 0.92f;
+        float availableHeight = height * 0.92f;
 
-        int cropBottom =
-                Math.round(src.getHeight() * .14f);
+        float scale = Math.min(
+                availableWidth / source.getWidth(),
+                availableHeight / source.getHeight()
+        );
 
-        Rect srcRect = new Rect(
-                0,
-                cropTop,
-                src.getWidth(),
-                src.getHeight() - cropBottom);
+        float drawWidth = source.getWidth() * scale;
+        float drawHeight = source.getHeight() * scale;
 
-        float k = Math.min(
-                w * .96f / srcRect.width(),
-                h * .96f / srcRect.height());
+        float left = (width - drawWidth) / 2f;
+        float top = (height - drawHeight) / 2f;
 
-        float dw = srcRect.width() * k;
-        float dh = srcRect.height() * k;
+        RectF destination = new RectF(
+                left,
+                top,
+                left + drawWidth,
+                top + drawHeight
+        );
 
-        cv.drawBitmap(
-                src,
-                srcRect,
-                new RectF(
-                        (w - dw) / 2f,
-                        (h - dh) / 2f,
-                        (w + dw) / 2f,
-                        (h + dh) / 2f),
-                p);
+        canvas.drawBitmap(
+                source,
+                null,
+                destination,
+                paint
+        );
 
-        return out;
+        return result;
     }
 
-    public static Bitmap render(Context c, int w, int h) {
-        return draw(c, TOP, w, h);
+    /**
+     * Imagen del coche utilizada en el mapa.
+     */
+    public static Bitmap render(
+            Context context,
+            int width,
+            int height) {
+
+        int selectedModel = model(context);
+
+        return drawFull(
+                context,
+                TOP[selectedModel],
+                width,
+                height
+        );
     }
 
-    public static Bitmap renderSide(Context c, int w, int h) {
-        return drawSide(c, w, h);
+    /**
+     * Imagen grande del selector.
+     *
+     * Cada modelo utiliza SU PROPIO PNG.
+     */
+    public static Bitmap renderSide(
+            Context context,
+            int width,
+            int height) {
+
+        int selectedModel = model(context);
+
+        return drawFull(
+                context,
+                SIDE[selectedModel],
+                width,
+                height
+        );
     }
 }
