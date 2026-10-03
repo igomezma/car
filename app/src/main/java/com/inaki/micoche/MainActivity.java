@@ -199,7 +199,10 @@ public class MainActivity extends Activity {
 
     private void configureActions() {
         findViewById(R.id.saveButton).setOnClickListener(v -> saveCurrentLocation());
-        parkingButton.setOnClickListener(v -> startParkingPhoto());
+        parkingButton.setOnClickListener(v -> {
+            if (ParkingPrefs.pending(this)) savePendingParkingNow();
+            else startParkingPhoto();
+        });
         navButton.setOnClickListener(v -> navigateToCar());
         findViewById(R.id.shareButton).setOnClickListener(v -> shareCar());
         findViewById(R.id.deleteButton).setOnClickListener(v -> deleteCar());
@@ -254,6 +257,7 @@ public class MainActivity extends Activity {
         if (parkingPendingView != null && parkingButton != null) {
             parkingPendingView.setVisibility(pendingParking ? View.VISIBLE : View.GONE);
             parkingButton.setBackgroundResource(pendingParking ? R.drawable.bg_parking_active : R.drawable.bg_action_button);
+            parkingButton.setText(ParkingPrefs.pending(this) ? "Guardar\nahora" : "Parking");
             if (pendingParking) {
                 mapWeb.setVisibility(View.GONE);
                 mapCar.setVisibility(View.GONE);
@@ -352,7 +356,7 @@ public class MainActivity extends Activity {
         configureCarAppearance(view);
 
         TextView versionText = view.findViewById(R.id.settingsVersionText);
-        versionText.setText("Where Is My Car · v1.9.31 · GAIKA");
+        versionText.setText("Where Is My Car · v1.9.32 · GAIKA");
 
         Button carBluetooth = view.findViewById(R.id.configureCarBluetoothButton);
         Button permissions = view.findViewById(R.id.autoPermissionsButton);
@@ -432,12 +436,12 @@ public class MainActivity extends Activity {
             final int choice=i;
             b.setOnClickListener(v -> {
                 CarAppearance.save(MainActivity.this,choice,0);
-                preview.setImageBitmap(CarAppearance.renderSide(MainActivity.this,dp(260),dp(100)));
+                preview.setImageBitmap(CarAppearance.renderSide(MainActivity.this,dp(360),dp(180)));
                 updateCarChoiceBorders(view,ids,choice);
                 applyCarAppearance();
             });
         }
-        preview.setImageBitmap(CarAppearance.renderSide(this,dp(260),dp(100)));
+        preview.setImageBitmap(CarAppearance.renderSide(this,dp(360),dp(180)));
         updateCarChoiceBorders(view,ids,CarAppearance.model(this));
     }
 
@@ -875,32 +879,53 @@ public class MainActivity extends Activity {
             return;
         }
         try {
+            final android.app.Dialog dialog = new android.app.Dialog(this, android.R.style.Theme_Material_NoActionBar);
+            android.widget.FrameLayout frame = new android.widget.FrameLayout(this);
+            frame.setBackgroundColor(android.graphics.Color.rgb(10, 13, 17));
+
             ImageView image = new ImageView(this);
-            int pad = dp(12);
-            image.setPadding(pad, pad, pad, pad);
-            image.setAdjustViewBounds(true);
+            image.setPadding(dp(10), dp(10), dp(10), dp(10));
+            image.setBackgroundResource(R.drawable.bg_photo_frame);
             image.setScaleType(ImageView.ScaleType.FIT_CENTER);
             image.setImageURI(Uri.parse(value));
-            new AlertDialog.Builder(this)
-                    .setTitle("Foto del parking")
-                    .setView(image)
-                    .setPositiveButton("Cerrar", null)
-                    .show();
+            android.widget.FrameLayout.LayoutParams ip =
+                    new android.widget.FrameLayout.LayoutParams(
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT);
+            ip.setMargins(dp(16), dp(22), dp(16), dp(78));
+            frame.addView(image, ip);
+
+            TextView close = new TextView(this);
+            close.setText("Cerrar");
+            close.setTextColor(getColor(R.color.white));
+            close.setTextSize(16);
+            close.setGravity(android.view.Gravity.CENTER);
+            close.setBackgroundResource(R.drawable.bg_primary_button);
+            android.widget.FrameLayout.LayoutParams cp =
+                    new android.widget.FrameLayout.LayoutParams(
+                            dp(130), dp(48),
+                            android.view.Gravity.BOTTOM | android.view.Gravity.CENTER_HORIZONTAL);
+            cp.bottomMargin = dp(18);
+            frame.addView(close, cp);
+            close.setOnClickListener(v -> dialog.dismiss());
+
+            dialog.setContentView(frame);
+            dialog.show();
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setLayout(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT);
+                dialog.getWindow().setStatusBarColor(android.graphics.Color.rgb(10,13,17));
+                dialog.getWindow().setNavigationBarColor(android.graphics.Color.rgb(10,13,17));
+            }
         } catch (Exception e) {
             Toast.makeText(this, "No he podido abrir la foto del parking.", Toast.LENGTH_LONG).show();
         }
     }
 
     private void resumePendingParkingLocation() {
-        if (!ParkingPrefs.pending(this)) return;
-        if (!hasLocationPermission()) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_LOCATION);
-            return;
-        }
-        if (!isAnyProviderEnabled()) return;
+        if (!ParkingPrefs.pending(this) || !hasLocationPermission()) return;
         stopParkingLocationUpdates();
-        String provider = bestProvider();
-        if (provider == null) return;
         final long after = ParkingPrefs.time(this);
         parkingLocationListener = new LocationListener() {
             @Override public void onLocationChanged(Location location) {
@@ -914,8 +939,29 @@ public class MainActivity extends Activity {
             @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
         };
         try {
-            locationManager.requestLocationUpdates(provider, 1500L, 0f, parkingLocationListener);
+            // PASSIVE_PROVIDER only receives fixes generated elsewhere; it does not switch GPS on.
+            locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0L, 0f, parkingLocationListener);
         } catch (SecurityException ignored) {}
+    }
+
+    private void savePendingParkingNow() {
+        if (!ParkingPrefs.pending(this)) return;
+        if (!hasLocationPermission()) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_LOCATION);
+            return;
+        }
+        if (!isAnyProviderEnabled()) {
+            Toast.makeText(this, "Activa la ubicación para guardar la posición.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        Toast.makeText(this, "Obteniendo ubicación…", Toast.LENGTH_SHORT).show();
+        requestFreshLocation(location -> {
+            if (location == null) {
+                Toast.makeText(this, "No he podido obtener la ubicación. Inténtalo de nuevo.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            savePendingParkingLocation(location);
+        });
     }
 
     private void savePendingParkingLocation(Location location) {
@@ -1364,7 +1410,7 @@ public class MainActivity extends Activity {
                 try { getContentResolver().delete(Uri.parse(oldPhoto), null, null); } catch (Exception ignored) {}
             }
             pendingParkingPhotoUri = null;
-            Toast.makeText(this, "Foto guardada. Esperando la primera ubicación al salir…", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Foto guardada. Se guardará al recibir una ubicación nueva, o pulsa «Guardar ahora».", Toast.LENGTH_LONG).show();
             refreshUi();
             resumePendingParkingLocation();
             return;

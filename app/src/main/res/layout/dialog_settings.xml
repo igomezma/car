@@ -64,7 +64,7 @@
     <ImageView
         android:id="@+id/carPreview"
         android:layout_width="match_parent"
-        android:layout_height="122dp"
+        android:layout_height="180dp"
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:paddingTop="5dp"
@@ -73,67 +73,21 @@
         android:cropToPadding="true"
         android:scaleType="fitCenter" />
 
-    <!-- CARRUSEL DE COCHES -->
+    <!-- SEIS COCHES · DOS FILAS DE TRES -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="58dp"
-        android:orientation="horizontal"
-        android:gravity="center">
-
-        <ImageButton
-            android:id="@+id/carChoice0"
-            android:layout_width="0dp"
-            android:layout_height="54dp"
-            android:layout_weight="1"
-            android:padding="4dp"
-            android:scaleType="fitCenter"
-            android:contentDescription="Troncomóvil" />
-
-        <ImageButton
-            android:id="@+id/carChoice1"
-            android:layout_width="0dp"
-            android:layout_height="54dp"
-            android:layout_weight="1"
-            android:padding="4dp"
-            android:scaleType="fitCenter"
-            android:contentDescription="Candy Car" />
-
-        <ImageButton
-            android:id="@+id/carChoice2"
-            android:layout_width="0dp"
-            android:layout_height="54dp"
-            android:layout_weight="1"
-            android:padding="4dp"
-            android:scaleType="fitCenter"
-            android:contentDescription="Cloud Car" />
-
-        <ImageButton
-            android:id="@+id/carChoice3"
-            android:layout_width="0dp"
-            android:layout_height="54dp"
-            android:layout_weight="1"
-            android:padding="4dp"
-            android:scaleType="fitCenter"
-            android:contentDescription="Space Car" />
-
-        <ImageButton
-            android:id="@+id/carChoice4"
-            android:layout_width="0dp"
-            android:layout_height="54dp"
-            android:layout_weight="1"
-            android:padding="4dp"
-            android:scaleType="fitCenter"
-            android:contentDescription="Bubble Car" />
-
-        <ImageButton
-            android:id="@+id/carChoice5"
-            android:layout_width="0dp"
-            android:layout_height="54dp"
-            android:layout_weight="1"
-            android:padding="4dp"
-            android:scaleType="fitCenter"
-            android:contentDescription="Cardboard Car" />
-
+        android:layout_height="116dp"
+        android:orientation="vertical">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="58dp" android:orientation="horizontal">
+            <ImageButton android:id="@+id/carChoice0" android:layout_width="0dp" android:layout_height="54dp" android:layout_weight="1" android:layout_margin="2dp" android:padding="4dp" android:scaleType="fitCenter" android:contentDescription="Troncomóvil" />
+            <ImageButton android:id="@+id/carChoice1" android:layout_width="0dp" android:layout_height="54dp" android:layout_weight="1" android:layout_margin="2dp" android:padding="4dp" android:scaleType="fitCenter" android:contentDescription="Candy Car" />
+            <ImageButton android:id="@+id/carChoice2" android:layout_width="0dp" android:layout_height="54dp" android:layout_weight="1" android:layout_margin="2dp" android:padding="4dp" android:scaleType="fitCenter" android:contentDescription="Cloud Car" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="58dp" android:orientation="horizontal">
+            <ImageButton android:id="@+id/carChoice3" android:layout_width="0dp" android:layout_height="54dp" android:layout_weight="1" android:layout_margin="2dp" android:padding="4dp" android:scaleType="fitCenter" android:contentDescription="Space Car" />
+            <ImageButton android:id="@+id/carChoice4" android:layout_width="0dp" android:layout_height="54dp" android:layout_weight="1" android:layout_margin="2dp" android:padding="4dp" android:scaleType="fitCenter" android:contentDescription="Bubble Car" />
+            <ImageButton android:id="@+id/carChoice5" android:layout_width="0dp" android:layout_height="54dp" android:layout_weight="1" android:layout_margin="2dp" android:padding="4dp" android:scaleType="fitCenter" android:contentDescription="Cardboard Car" />
+        </LinearLayout>
     </LinearLayout>
 
     <View
@@ -249,6 +203,7 @@
             android:layout_width="0dp"
             android:layout_height="36dp"
             android:layout_weight="1"
+            android:background="@drawable/bg_delete_button"
             android:text="@string/disable_auto_short"
             android:textAllCaps="false"
             android:textSize="9sp" />

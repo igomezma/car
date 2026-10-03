@@ -154,7 +154,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
                 android:gravity="center"
-                android:text="Esperando señal GPS…"
+                android:text="Esperando ubicación sin activar el GPS · o pulsa «Guardar ahora»"
                 android:textColor="@color/muted"
                 android:textSize="13sp" />
         </LinearLayout>
@@ -380,7 +380,7 @@
             android:layout_height="match_parent"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_action_button"
+            android:background="@drawable/bg_delete_button"
             android:drawableTop="@drawable/ic_action_delete"
             android:drawableTint="#FF4646"
             android:fontFamily="sans-serif-medium"
