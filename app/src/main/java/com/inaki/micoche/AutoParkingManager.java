@@ -124,11 +124,11 @@ public final class AutoParkingManager {
                             if (location != null && location.getTime() >= notBefore) {
                                 saveLocation(context, location, testMode);
                             } else {
-                                saveFallbackOrFail(context, locationManager, testMode, notBefore)
+                                saveFallbackOrFail(context, locationManager, testMode, notBefore);
                             }
                         });
             } else {
-                saveFallbackOrFail(context, locationManager, testMode, notBefore)
+                saveFallbackOrFail(context, locationManager, testMode, notBefore);
             }
         } catch (SecurityException e) {
             AutoParkingPrefs.setLastEvent(context,
