@@ -1,14 +1,19 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+}
+
 android {
     namespace 'com.inaki.micoche'
     compileSdk 36
+
     defaultConfig {
         applicationId "com.inaki.micoche"
         minSdk 26
         targetSdk 36
-        versionCode 37
-        versionName "1.9.27"
+        versionCode 38
+        versionName "1.9.28"
     }
+
     signingConfigs {
         release {
             def keyPath = System.getenv("UPLOAD_KEYSTORE_PATH")
@@ -20,10 +25,13 @@ android {
             }
         }
     }
+
     buildTypes {
         release {
             minifyEnabled false
-            if (System.getenv("UPLOAD_KEYSTORE_PATH")) signingConfig signingConfigs.release
+            if (System.getenv("UPLOAD_KEYSTORE_PATH")) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
