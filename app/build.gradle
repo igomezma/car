@@ -10,8 +10,8 @@ android {
         applicationId "com.inaki.micoche"
         minSdk 26
         targetSdk 36
-        versionCode 35
-        versionName "1.9.25"
+        versionCode 36
+        versionName "1.9.26"
     }
 
     signingConfigs {
