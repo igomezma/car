@@ -119,6 +119,45 @@
             android:contentDescription="@string/saved_car"
             android:src="@drawable/ic_car_top" />
 
+
+
+        <LinearLayout
+            android:id="@+id/parkingPendingView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/bg"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="18dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/parkingPendingImage"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Aparcado en parking"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/parkingPendingText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:gravity="center"
+                android:text="Esperando señal GPS…"
+                android:textColor="@color/muted"
+                android:textSize="13sp" />
+        </LinearLayout>
         <TextView
             android:id="@+id/mapTip"
             android:layout_width="wrap_content"

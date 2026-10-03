@@ -1,46 +1,34 @@
 package com.inaki.micoche;
 
+import android.companion.AssociationInfo;
 import android.companion.CompanionDeviceService;
+import android.companion.DevicePresenceEvent;
+import android.os.Build;
 
 public class AutoParkingCompanionService extends CompanionDeviceService {
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public void onDeviceAppeared(String address) {
-        if (!matchesSelectedCar(address)) return;
-
+    private void connected() {
         AutoParkingPrefs.setSeenConnected(this, true);
-        AutoParkingPrefs.setLastEvent(
-                this,
-                "Bluetooth del coche conectado. Esperando a que aparques.");
+        AutoParkingPrefs.setLastEvent(this, "Bluetooth del coche conectado. Esperando a que aparques.");
     }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public void onDeviceDisappeared(String address) {
-        if (!matchesSelectedCar(address)) return;
-        if (!AutoParkingPrefs.enabled(this)) return;
-
-        // Evita guardar una posición simplemente por configurar un dispositivo
-        // que todavía no se había conectado al teléfono desde la configuración.
-        if (!AutoParkingPrefs.seenConnected(this)) {
-            AutoParkingPrefs.setLastEvent(
-                    this,
-                    "Bluetooth no disponible, pero todavía no se había detectado una conexión.");
-            return;
-        }
-
+    private void disconnected() {
+        if (!AutoParkingPrefs.enabled(this) || !AutoParkingPrefs.seenConnected(this)) return;
         AutoParkingPrefs.setSeenConnected(this, false);
-        AutoParkingPrefs.setLastEvent(
-                this,
-                "Bluetooth desconectado. Obteniendo ubicación…");
-
+        AutoParkingPrefs.setLastEvent(this, "Bluetooth desconectado. Esperando ubicación nueva…");
+        AutoParkingPrefs.setWaitingForFreshLocation(this, true);
         AutoParkingManager.saveAutomaticParking(this, false, System.currentTimeMillis());
     }
-
-    private boolean matchesSelectedCar(String address) {
-        if (address == null) return false;
-        String selected = AutoParkingPrefs.address(this);
-        return selected != null && selected.equalsIgnoreCase(address);
+    @Override public void onDevicePresenceEvent(DevicePresenceEvent event) {
+        if (Build.VERSION.SDK_INT < 36) return;
+        int e=event.getEvent();
+        if (e==DevicePresenceEvent.EVENT_BT_CONNECTED || e==DevicePresenceEvent.EVENT_BLE_APPEARED) connected();
+        else if (e==DevicePresenceEvent.EVENT_BT_DISCONNECTED || e==DevicePresenceEvent.EVENT_BLE_DISAPPEARED) disconnected();
+    }
+    @Override public void onDeviceAppeared(AssociationInfo info) { if (Build.VERSION.SDK_INT < 36) connected(); }
+    @Override public void onDeviceDisappeared(AssociationInfo info) { if (Build.VERSION.SDK_INT < 36) disconnected(); }
+    @Override @SuppressWarnings("deprecation") public void onDeviceAppeared(String address) { if (Build.VERSION.SDK_INT < 33 && matches(address)) connected(); }
+    @Override @SuppressWarnings("deprecation") public void onDeviceDisappeared(String address) { if (Build.VERSION.SDK_INT < 33 && matches(address)) disconnected(); }
+    private boolean matches(String address) {
+        String selected=AutoParkingPrefs.address(this);
+        return address!=null && selected!=null && selected.equalsIgnoreCase(address);
     }
 }

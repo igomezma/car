@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.companion.CompanionDeviceManager;
+import android.companion.ObservingDevicePresenceRequest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -43,7 +44,18 @@ public final class AutoParkingManager {
         try {
             CompanionDeviceManager manager =
                     (CompanionDeviceManager) context.getSystemService(Context.COMPANION_DEVICE_SERVICE);
-            manager.startObservingDevicePresence(address);
+            if (Build.VERSION.SDK_INT >= 36) {
+                for (android.companion.AssociationInfo info : manager.getMyAssociations()) {
+                    if (info.getDeviceMacAddress() != null && address.equalsIgnoreCase(info.getDeviceMacAddress().toString())) {
+                        ObservingDevicePresenceRequest request = new ObservingDevicePresenceRequest.Builder()
+                                .setAssociationId(info.getId()).build();
+                        manager.startObservingDevicePresence(request);
+                        break;
+                    }
+                }
+            } else {
+                manager.startObservingDevicePresence(address);
+            }
         } catch (Exception ignored) {
             // Si ya se estaba observando, o la asociación todavía no está lista,
             // no rompemos la app. Al abrir Ajustes se mostrará el estado.
@@ -60,7 +72,17 @@ public final class AutoParkingManager {
         try {
             CompanionDeviceManager manager =
                     (CompanionDeviceManager) context.getSystemService(Context.COMPANION_DEVICE_SERVICE);
-            manager.stopObservingDevicePresence(address);
+            if (Build.VERSION.SDK_INT >= 36) {
+                for (android.companion.AssociationInfo info : manager.getMyAssociations()) {
+                    if (info.getDeviceMacAddress() != null && address.equalsIgnoreCase(info.getDeviceMacAddress().toString())) {
+                        manager.stopObservingDevicePresence(new ObservingDevicePresenceRequest.Builder()
+                                .setAssociationId(info.getId()).build());
+                        break;
+                    }
+                }
+            } else {
+                manager.stopObservingDevicePresence(address);
+            }
         } catch (Exception ignored) {}
     }
 
@@ -81,10 +103,12 @@ public final class AutoParkingManager {
 
     public static void saveAutomaticParking(Context context, boolean testMode, long notBefore) {
         if (!testMode && !AutoParkingPrefs.enabled(context)) return;
+        if (!testMode) AutoParkingPrefs.setWaitingForFreshLocation(context, true);
 
         if (!hasForegroundLocation(context) || !hasBackgroundLocation(context)) {
             AutoParkingPrefs.setLastEvent(context,
                     "No se guardó: falta permitir ubicación todo el tiempo.");
+            AutoParkingPrefs.setWaitingForFreshLocation(context, false);
             notifyStatus(context,
                     "No pude guardar el coche",
                     "Activa «Permitir siempre» para la ubicación de Mi Coche.");
@@ -108,6 +132,7 @@ public final class AutoParkingManager {
         if (provider == null) {
             AutoParkingPrefs.setLastEvent(context,
                     "No se guardó: la ubicación del teléfono estaba desactivada.");
+            AutoParkingPrefs.setWaitingForFreshLocation(context, false);
             notifyStatus(context,
                     "No pude guardar el coche",
                     "La ubicación del teléfono estaba desactivada.");
@@ -173,6 +198,7 @@ public final class AutoParkingManager {
         } else {
             AutoParkingPrefs.setLastEvent(context,
                     "No se guardó: no había una posición reciente disponible.");
+            AutoParkingPrefs.setWaitingForFreshLocation(context, false);
             notifyStatus(context,
                     "No pude guardar el coche",
                     "No había una posición GPS reciente. Puedes usar «Guardar aquí».");
@@ -207,6 +233,7 @@ public final class AutoParkingManager {
                 time,
                 CarStorage.SOURCE_AUTO);
 
+        AutoParkingPrefs.setWaitingForFreshLocation(context, false);
         AutoParkingPrefs.markAutoSaved(context);
         AutoParkingPrefs.setLastEvent(
                 context,

@@ -67,6 +67,9 @@ public class MainActivity extends Activity {
     private WebView mapWeb;
     private ImageView mapCar;
     private ImageView carCardIcon;
+    private View parkingPendingView;
+    private ImageView parkingPendingImage;
+    private Button parkingButton;
     private TextView mapTip;
     private TextView statusTitle;
     private TextView savedAgo;
@@ -120,6 +123,9 @@ public class MainActivity extends Activity {
         mapWeb = findViewById(R.id.mapWeb);
         mapCar = findViewById(R.id.mapCar);
         carCardIcon = findViewById(R.id.carCardIcon);
+        parkingPendingView = findViewById(R.id.parkingPendingView);
+        parkingPendingImage = findViewById(R.id.parkingPendingImage);
+        parkingButton = findViewById(R.id.parkingButton);
         mapTip = findViewById(R.id.mapTip);
         statusTitle = findViewById(R.id.statusTitle);
         savedAgo = findViewById(R.id.savedAgo);
@@ -193,7 +199,7 @@ public class MainActivity extends Activity {
 
     private void configureActions() {
         findViewById(R.id.saveButton).setOnClickListener(v -> saveCurrentLocation());
-        findViewById(R.id.parkingButton).setOnClickListener(v -> startParkingPhoto());
+        parkingButton.setOnClickListener(v -> startParkingPhoto());
         navButton.setOnClickListener(v -> navigateToCar());
         findViewById(R.id.shareButton).setOnClickListener(v -> shareCar());
         findViewById(R.id.deleteButton).setOnClickListener(v -> deleteCar());
@@ -244,6 +250,25 @@ public class MainActivity extends Activity {
     }
 
     private void refreshUi() {
+        boolean pendingParking = ParkingPrefs.pending(this) || AutoParkingPrefs.waitingForFreshLocation(this);
+        if (parkingPendingView != null && parkingButton != null) {
+            parkingPendingView.setVisibility(pendingParking ? View.VISIBLE : View.GONE);
+            parkingButton.setBackgroundResource(pendingParking ? R.drawable.bg_parking_active : R.drawable.bg_action_button);
+            if (pendingParking) {
+                mapWeb.setVisibility(View.GONE);
+                mapCar.setVisibility(View.GONE);
+                mapTip.setVisibility(View.GONE);
+                String photo = ParkingPrefs.photo(this);
+                if (photo != null && !photo.trim().isEmpty()) {
+                    parkingPendingImage.setImageURI(Uri.parse(photo));
+                } else {
+                    parkingPendingImage.setImageBitmap(CarAppearance.renderSide(this, dp(310), dp(180)));
+                }
+            } else {
+                mapWeb.setVisibility(View.VISIBLE);
+                mapTip.setVisibility(View.VISIBLE);
+            }
+        }
         boolean has = CarStorage.hasCar(this);
 
         mapCar.setVisibility(has ? View.VISIBLE : View.GONE);
@@ -325,7 +350,9 @@ public class MainActivity extends Activity {
 
         updateSettingsView(view);
         configureCarAppearance(view);
-        configureGarages(view);
+
+        TextView versionText = view.findViewById(R.id.settingsVersionText);
+        versionText.setText("Where Is My Car · v" + BuildConfig.VERSION_NAME + " · GAIKA");
 
         Button carBluetooth = view.findViewById(R.id.configureCarBluetoothButton);
         Button permissions = view.findViewById(R.id.autoPermissionsButton);
@@ -1378,6 +1405,7 @@ public class MainActivity extends Activity {
             }
             pendingParkingPhotoUri = null;
             Toast.makeText(this, "Foto guardada. Esperando la primera ubicación al salir…", Toast.LENGTH_LONG).show();
+            refreshUi();
             resumePendingParkingLocation();
             return;
         }

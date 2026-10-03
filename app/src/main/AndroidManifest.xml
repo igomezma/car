@@ -19,6 +19,7 @@
     <!-- Presencia del Bluetooth del coche con la app cerrada -->
     <uses-permission android:name="android.permission.REQUEST_OBSERVE_COMPANION_DEVICE_PRESENCE" />
     <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_START_FOREGROUND_SERVICES_FROM_BACKGROUND" />
 
     <!-- Aviso "coche guardado automáticamente" -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
