@@ -1,66 +1,15 @@
 package com.inaki.micoche;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-
+import android.content.*;
 public final class CarStorage {
-    private static final String PREFS = "mi_coche";
-    private static final String LAT = "lat";
-    private static final String LON = "lon";
-    private static final String ADDRESS = "address";
-    private static final String TIME = "time";
-    private static final String HAS = "has";
-    private static final String SOURCE = "source";
-
-    public static final String SOURCE_MANUAL = "manual";
-    public static final String SOURCE_AUTO = "auto";
-
-    private CarStorage() {}
-
-    private static SharedPreferences prefs(Context context) {
-        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-    }
-
-    public static boolean hasCar(Context context) {
-        return prefs(context).getBoolean(HAS, false);
-    }
-
-    public static void save(Context context, double lat, double lon, String address, long time) {
-        save(context, lat, lon, address, time, SOURCE_MANUAL);
-    }
-
-    public static void save(Context context, double lat, double lon, String address, long time, String source) {
-        prefs(context).edit()
-                .putBoolean(HAS, true)
-                .putLong(LAT, Double.doubleToRawLongBits(lat))
-                .putLong(LON, Double.doubleToRawLongBits(lon))
-                .putString(ADDRESS, address == null ? "" : address)
-                .putLong(TIME, time)
-                .putString(SOURCE, source == null ? SOURCE_MANUAL : source)
-                .apply();
-    }
-
-    public static void clear(Context context) {
-        prefs(context).edit().clear().apply();
-    }
-
-    public static double lat(Context context) {
-        return Double.longBitsToDouble(prefs(context).getLong(LAT, Double.doubleToRawLongBits(0.0)));
-    }
-
-    public static double lon(Context context) {
-        return Double.longBitsToDouble(prefs(context).getLong(LON, Double.doubleToRawLongBits(0.0)));
-    }
-
-    public static String address(Context context) {
-        return prefs(context).getString(ADDRESS, "");
-    }
-
-    public static long time(Context context) {
-        return prefs(context).getLong(TIME, 0L);
-    }
-
-    public static String source(Context context) {
-        return prefs(context).getString(SOURCE, SOURCE_MANUAL);
-    }
+ private static final String P="mi_coche";
+ public static final String SOURCE_MANUAL="manual",SOURCE_AUTO="auto",SOURCE_GARAGE="garage";
+ private static SharedPreferences p(Context c){return c.getSharedPreferences(P,Context.MODE_PRIVATE);}
+ public static void save(Context c,double lat,double lon,String a,long t,String s){p(c).edit().putBoolean("has",true).putLong("lat",Double.doubleToRawLongBits(lat)).putLong("lon",Double.doubleToRawLongBits(lon)).putString("address",a==null?"":a).putLong("time",t).putString("source",s).apply();}
+ public static boolean hasCar(Context c){return p(c).getBoolean("has",false);}
+ public static double lat(Context c){return Double.longBitsToDouble(p(c).getLong("lat",0));}
+ public static double lon(Context c){return Double.longBitsToDouble(p(c).getLong("lon",0));}
+ public static String address(Context c){return p(c).getString("address","");}
+ public static long time(Context c){return p(c).getLong("time",0);}
+ public static String source(Context c){return p(c).getString("source",SOURCE_MANUAL);}
+ public static void clear(Context c){p(c).edit().clear().apply();}
 }
