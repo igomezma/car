@@ -270,10 +270,19 @@ public class MainActivity extends Activity {
         statusTitle.setText("Coche guardado");
 
         String ago = formatAgo(CarStorage.time(this));
-        if (CarStorage.SOURCE_AUTO.equals(CarStorage.source(this))) {
-            savedAgo.setText("Automático · " + ago);
+        String parkingPhoto = ParkingPrefs.photo(this);
+        if (parkingPhoto != null && !parkingPhoto.trim().isEmpty()) {
+            savedAgo.setText("Parking · Ver foto · " + ago);
+            savedAgo.setOnClickListener(v -> showParkingPhoto());
+            savedAgo.setClickable(true);
         } else {
-            savedAgo.setText(ago);
+            savedAgo.setOnClickListener(null);
+            savedAgo.setClickable(false);
+            if (CarStorage.SOURCE_AUTO.equals(CarStorage.source(this))) {
+                savedAgo.setText("Automático · " + ago);
+            } else {
+                savedAgo.setText(ago);
+            }
         }
 
         String address = CarStorage.address(this);
@@ -421,7 +430,7 @@ public class MainActivity extends Activity {
         bindGarage(view,"home2","Casa 2",R.id.garageHome2Label,R.id.garageHome2Button,R.id.garageHome2Delete);
         bindGarage(view,"work","Trabajo",R.id.garageWorkLabel,R.id.garageWorkButton,R.id.garageWorkDelete);
         Button temp=view.findViewById(R.id.tempParkingButton);
-        temp.setOnClickListener(v -> saveCurrentLocation());
+        temp.setOnClickListener(v -> startParkingPhoto());
     }
 
     private void bindGarage(View view,String key,String title,int labelId,int saveId,int deleteId) {
@@ -872,6 +881,29 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void showParkingPhoto() {
+        String value = ParkingPrefs.photo(this);
+        if (value == null || value.trim().isEmpty()) {
+            Toast.makeText(this, "No hay foto de parking guardada.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            ImageView image = new ImageView(this);
+            int pad = dp(12);
+            image.setPadding(pad, pad, pad, pad);
+            image.setAdjustViewBounds(true);
+            image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            image.setImageURI(Uri.parse(value));
+            new AlertDialog.Builder(this)
+                    .setTitle("Foto del parking")
+                    .setView(image)
+                    .setPositiveButton("Cerrar", null)
+                    .show();
+        } catch (Exception e) {
+            Toast.makeText(this, "No he podido abrir la foto del parking.", Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void resumePendingParkingLocation() {
         if (!ParkingPrefs.pending(this)) return;
         if (!hasLocationPermission()) {
@@ -903,7 +935,7 @@ public class MainActivity extends Activity {
         stopParkingLocationUpdates();
         double lat = location.getLatitude(), lon = location.getLongitude();
         CarStorage.save(this, lat, lon, "Parking · foto guardada", System.currentTimeMillis(), CarStorage.SOURCE_MANUAL);
-        ParkingPrefs.clear(this);
+        ParkingPrefs.complete(this);
         refreshUi();
         updateDistance(location);
         CarWidgetProvider.updateAll(this);
@@ -1243,6 +1275,11 @@ public class MainActivity extends Activity {
                 .setMessage(
                         "¿Quieres borrar la ubicación guardada del coche?")
                 .setPositiveButton("Borrar", (d, w) -> {
+                    String parkingPhoto = ParkingPrefs.photo(this);
+                    if (parkingPhoto != null && !parkingPhoto.trim().isEmpty()) {
+                        try { getContentResolver().delete(Uri.parse(parkingPhoto), null, null); } catch (Exception ignored) {}
+                    }
+                    ParkingPrefs.clearAll(this);
                     CarStorage.clear(this);
                     refreshUi();
                     CarWidgetProvider.updateAll(this);
@@ -1333,7 +1370,12 @@ public class MainActivity extends Activity {
                 return;
             }
             long photoTime = System.currentTimeMillis();
-            ParkingPrefs.begin(this, pendingParkingPhotoUri == null ? "" : pendingParkingPhotoUri.toString(), photoTime);
+            String oldPhoto = ParkingPrefs.photo(this);
+            String newPhoto = pendingParkingPhotoUri == null ? "" : pendingParkingPhotoUri.toString();
+            ParkingPrefs.begin(this, newPhoto, photoTime);
+            if (oldPhoto != null && !oldPhoto.trim().isEmpty() && !oldPhoto.equals(newPhoto)) {
+                try { getContentResolver().delete(Uri.parse(oldPhoto), null, null); } catch (Exception ignored) {}
+            }
             pendingParkingPhotoUri = null;
             Toast.makeText(this, "Foto guardada. Esperando la primera ubicación al salir…", Toast.LENGTH_LONG).show();
             resumePendingParkingLocation();
