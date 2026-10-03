@@ -352,7 +352,7 @@ public class MainActivity extends Activity {
         configureCarAppearance(view);
 
         TextView versionText = view.findViewById(R.id.settingsVersionText);
-        versionText.setText("Where Is My Car · v" + BuildConfig.VERSION_NAME + " · GAIKA");
+        versionText.setText("Where Is My Car · v1.9.31 · GAIKA");
 
         Button carBluetooth = view.findViewById(R.id.configureCarBluetoothButton);
         Button permissions = view.findViewById(R.id.autoPermissionsButton);
@@ -450,46 +450,6 @@ public class MainActivity extends Activity {
             view.findViewById(ids[i]).setBackground(bg);
             view.findViewById(ids[i]).setAlpha(i==selected?1f:.72f);
         }
-    }
-
-    private void configureGarages(View view) {
-        bindGarage(view,"home","Casa",R.id.garageHomeLabel,R.id.garageHomeButton,R.id.garageHomeDelete);
-        bindGarage(view,"home2","Casa 2",R.id.garageHome2Label,R.id.garageHome2Button,R.id.garageHome2Delete);
-        bindGarage(view,"work","Trabajo",R.id.garageWorkLabel,R.id.garageWorkButton,R.id.garageWorkDelete);
-        Button temp=view.findViewById(R.id.tempParkingButton);
-        temp.setOnClickListener(v -> startParkingPhoto());
-    }
-
-    private void bindGarage(View view,String key,String title,int labelId,int saveId,int deleteId) {
-        TextView label=view.findViewById(labelId);
-        Button save=view.findViewById(saveId);
-        Button delete=view.findViewById(deleteId);
-        Runnable refresh=() -> {
-            boolean has=GaragePrefs.has(this,key);
-            label.setText(has ? title+"  ✓" : title);
-            delete.setEnabled(has);
-            delete.setAlpha(has?1f:.4f);
-        };
-        save.setOnClickListener(v -> saveGaragePosition(key,title,refresh));
-        delete.setOnClickListener(v -> { GaragePrefs.clear(this,key); refresh.run(); Toast.makeText(this,title+": posición eliminada",Toast.LENGTH_SHORT).show(); });
-        refresh.run();
-    }
-
-    private void saveGaragePosition(String key,String title,Runnable refresh) {
-        if (!hasLocationPermission()) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},REQ_LOCATION);
-            Toast.makeText(this,"Concede ubicación y pulsa Guardar posición otra vez",Toast.LENGTH_LONG).show();
-            return;
-        }
-        if (!isAnyProviderEnabled()) { Toast.makeText(this,"Activa la ubicación para guardar el garaje",Toast.LENGTH_LONG).show(); return; }
-        Toast.makeText(this,"Obteniendo ubicación precisa…",Toast.LENGTH_SHORT).show();
-        requestFreshLocation(location -> {
-            if (location==null) { Toast.makeText(this,"No he podido obtener la ubicación",Toast.LENGTH_LONG).show(); return; }
-            GaragePrefs.save(this,key,location.getLatitude(),location.getLongitude(),location.hasAccuracy()?location.getAccuracy():0f);
-            refresh.run();
-            String acc=location.hasAccuracy()?" · ±"+Math.round(location.getAccuracy())+" m":"";
-            Toast.makeText(this,title+" guardado"+acc,Toast.LENGTH_SHORT).show();
-        });
     }
 
     private void applyCarAppearance() {
