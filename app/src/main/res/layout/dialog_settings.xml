@@ -50,20 +50,17 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- SELECTOR DE COCHE -->
+    <!-- ZONA 1 · SELECTOR DE COCHE -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="24dp"
+        android:layout_marginTop="6dp"
         android:gravity="center_vertical"
         android:text="Elige tu coche"
         android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold" />
 
-    <!--
-        Más aire vertical para el coche seleccionado.
-        fitCenter evita recortes.
-    -->
     <ImageView
         android:id="@+id/carPreview"
         android:layout_width="match_parent"
@@ -76,7 +73,7 @@
         android:cropToPadding="true"
         android:scaleType="fitCenter" />
 
-    <!-- Carrusel: únicamente los seis coches -->
+    <!-- CARRUSEL DE COCHES -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="58dp"
@@ -136,6 +133,7 @@
             android:padding="4dp"
             android:scaleType="fitCenter"
             android:contentDescription="Cardboard Car" />
+
     </LinearLayout>
 
     <View
@@ -144,10 +142,11 @@
         android:layout_marginTop="4dp"
         android:background="@color/muted2" />
 
-    <!-- GARAJES -->
+    <!-- ZONA 2 · GARAJES -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="30dp"
+        android:layout_marginTop="7dp"
         android:gravity="center_vertical"
         android:text="Garajes"
         android:textColor="@color/white"
@@ -187,6 +186,7 @@
             android:text="Eliminar"
             android:textAllCaps="false"
             android:textSize="10sp" />
+
     </LinearLayout>
 
     <!-- CASA 2 -->
@@ -222,6 +222,7 @@
             android:text="Eliminar"
             android:textAllCaps="false"
             android:textSize="10sp" />
+
     </LinearLayout>
 
     <!-- TRABAJO -->
@@ -257,6 +258,7 @@
             android:text="Eliminar"
             android:textAllCaps="false"
             android:textSize="10sp" />
+
     </LinearLayout>
 
     <!-- PARKING TEMPORAL -->
@@ -277,10 +279,11 @@
         android:layout_marginTop="5dp"
         android:background="@color/muted2" />
 
-    <!-- APARCAMIENTO AUTOMÁTICO -->
+    <!-- ZONA 3 · APARCAMIENTO AUTOMÁTICO -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="27dp"
+        android:layout_marginTop="7dp"
         android:gravity="center_vertical"
         android:text="@string/auto_parking"
         android:textColor="@color/white"
@@ -316,6 +319,7 @@
                 android:text="@string/bt_not_configured"
                 android:textColor="@color/muted"
                 android:textSize="9sp" />
+
         </LinearLayout>
 
         <Button
@@ -327,6 +331,7 @@
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="10sp" />
+
     </LinearLayout>
 
     <TextView
@@ -354,7 +359,6 @@
         android:layout_height="38dp"
         android:orientation="horizontal">
 
-        <!-- PERMISOS EN NARANJA -->
         <Button
             android:id="@+id/autoPermissionsButton"
             android:layout_width="0dp"
@@ -383,13 +387,16 @@
             android:text="@string/disable_auto_short"
             android:textAllCaps="false"
             android:textSize="9sp" />
+
     </LinearLayout>
 
+    <!-- PIE -->
     <TextView
+        android:id="@+id/settingsVersionText"
         android:layout_width="match_parent"
         android:layout_height="18dp"
         android:gravity="center"
-        android:text="Where Is My Car · v1.9.20 · GAIKA"
+        android:text="Where Is My Car · v1.9.22 · GAIKA"
         android:textColor="@color/muted2"
         android:textSize="9sp" />
 
