@@ -11,7 +11,6 @@ public final class AutoParkingPrefs {
     private static final String SEEN_CONNECTED = "seen_connected";
     private static final String LAST_EVENT = "last_event";
     private static final String LAST_AUTO_SAVE = "last_auto_save";
-    private static final String PARKING_PENDING = "parking_pending";
 
     private AutoParkingPrefs() {}
 
@@ -68,14 +67,6 @@ public final class AutoParkingPrefs {
     public static boolean recentlyAutoSaved(Context context) {
         long last = lastAutoSave(context);
         return last > 0 && System.currentTimeMillis() - last < 90_000L;
-    }
-
-    public static void setParkingPending(Context context, boolean pending) {
-        prefs(context).edit().putBoolean(PARKING_PENDING, pending).apply();
-    }
-
-    public static boolean parkingPending(Context context) {
-        return prefs(context).getBoolean(PARKING_PENDING, false);
     }
 
     public static void disable(Context context) {

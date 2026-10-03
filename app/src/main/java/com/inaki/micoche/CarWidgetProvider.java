@@ -106,17 +106,13 @@ public class CarWidgetProvider extends AppWidgetProvider {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         views.setOnClickPendingIntent(R.id.widgetSave, savePending);
-        Intent parkingIntent = new Intent(context, MainActivity.class);
-        parkingIntent.setAction(AutoParkingPrefs.parkingPending(context)
-                ? MainActivity.ACTION_RESOLVE_PARKING : MainActivity.ACTION_PARKING_NOW);
-        parkingIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent parkingPending = PendingIntent.getActivity(
-                context, appWidgetId * 100 + 3, parkingIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        views.setOnClickPendingIntent(R.id.widgetParking, parkingPending);
-        views.setTextViewText(R.id.widgetParking,
-                AutoParkingPrefs.parkingPending(context) ? "Completar" : "Parking");
 
+        // Parking: abre directamente el flujo de foto, sin pedir GPS antes.
+        Intent parkingIntent = new Intent(context, MainActivity.class);
+        parkingIntent.setAction(MainActivity.ACTION_PARKING);
+        parkingIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent parkingPending = PendingIntent.getActivity(context, appWidgetId * 100 + 3, parkingIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        views.setOnClickPendingIntent(R.id.widgetParking, parkingPending);
 
         // Ir al coche: broadcast al AppWidgetProvider.
         Intent navIntent = new Intent(context, CarWidgetProvider.class);

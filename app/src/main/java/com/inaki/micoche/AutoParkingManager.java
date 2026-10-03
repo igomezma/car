@@ -76,10 +76,10 @@ public final class AutoParkingManager {
     }
 
     public static void saveAutomaticParking(Context context, boolean testMode) {
-        saveAutomaticParking(context, testMode, 0L);
+        saveAutomaticParking(context, testMode, System.currentTimeMillis());
     }
 
-    public static void saveAutomaticParking(Context context, boolean testMode, long notBeforeMillis) {
+    public static void saveAutomaticParking(Context context, boolean testMode, long notBefore) {
         if (!testMode && !AutoParkingPrefs.enabled(context)) return;
 
         if (!hasForegroundLocation(context) || !hasBackgroundLocation(context)) {
@@ -98,7 +98,7 @@ public final class AutoParkingManager {
         LocationManager locationManager =
                 (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
-        Location best = bestRecentLocation(locationManager, notBeforeMillis);
+        Location best = bestRecentLocation(locationManager, notBefore);
         if (best != null) {
             saveLocation(context, best, testMode);
             return;
@@ -121,14 +121,14 @@ public final class AutoParkingManager {
                         null,
                         context.getMainExecutor(),
                         location -> {
-                            if (location != null && (notBeforeMillis <= 0L || location.getTime() >= notBeforeMillis)) {
+                            if (location != null && location.getTime() >= notBefore) {
                                 saveLocation(context, location, testMode);
                             } else {
-                                saveFallbackOrFail(context, locationManager, testMode, notBeforeMillis);
+                                saveFallbackOrFail(context, locationManager, testMode, notBefore)
                             }
                         });
             } else {
-                saveFallbackOrFail(context, locationManager, testMode, notBeforeMillis);
+                saveFallbackOrFail(context, locationManager, testMode, notBefore)
             }
         } catch (SecurityException e) {
             AutoParkingPrefs.setLastEvent(context,
@@ -136,15 +136,15 @@ public final class AutoParkingManager {
         }
     }
 
-    private static Location bestRecentLocation(LocationManager manager, long notBeforeMillis) {
+    private static Location bestRecentLocation(LocationManager manager, long notBefore) {
         try {
             Location best = null;
             for (String provider : manager.getProviders(true)) {
                 Location l = manager.getLastKnownLocation(provider);
                 if (l == null) continue;
-                if (notBeforeMillis > 0L && l.getTime() < notBeforeMillis) continue;
 
                 long age = Math.abs(System.currentTimeMillis() - l.getTime());
+                if (l.getTime() < notBefore) continue;
                 if (age > 120_000L) continue;
                 if (l.hasAccuracy() && l.getAccuracy() > 120f) continue;
 
@@ -165,27 +165,17 @@ public final class AutoParkingManager {
             Context context,
             LocationManager manager,
             boolean testMode,
-            long notBeforeMillis) {
+            long notBefore) {
 
-        Location fallback = bestRecentLocation(manager, notBeforeMillis);
+        Location fallback = bestRecentLocation(manager, notBefore);
         if (fallback != null) {
             saveLocation(context, fallback, testMode);
         } else {
-            if (!testMode && notBeforeMillis > 0L) {
-                AutoParkingPrefs.setParkingPending(context, true);
-                AutoParkingPrefs.setLastEvent(context,
-                        "Bluetooth desconectado: sin GPS posterior. Parking pendiente.");
-                notifyStatus(context,
-                        "Sin GPS al aparcar",
-                        "Abre Where Is My Car para elegir Casa, Casa 2, Trabajo o hacer una foto.");
-                CarWidgetProvider.updateAll(context);
-            } else {
-                AutoParkingPrefs.setLastEvent(context,
-                        "No se guardó: no había una posición reciente disponible.");
-                notifyStatus(context,
-                        "No pude guardar el coche",
-                        "No había una posición GPS reciente. Puedes usar «Guardar aquí».");
-            }
+            AutoParkingPrefs.setLastEvent(context,
+                    "No se guardó: no había una posición reciente disponible.");
+            notifyStatus(context,
+                    "No pude guardar el coche",
+                    "No había una posición GPS reciente. Puedes usar «Guardar aquí».");
         }
     }
 
@@ -209,7 +199,6 @@ public final class AutoParkingManager {
         String initialAddress = String.format(
                 Locale.US, "%.6f, %.6f", lat, lon);
 
-        AutoParkingPrefs.setParkingPending(context, false);
         CarStorage.save(
                 context,
                 lat,

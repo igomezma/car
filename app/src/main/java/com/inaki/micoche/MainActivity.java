@@ -23,10 +23,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.Bitmap;
 import android.provider.MediaStore;
-import java.io.FileOutputStream;
+import android.content.ContentValues;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -56,8 +55,7 @@ import java.util.concurrent.Executor;
 
 public class MainActivity extends Activity {
     public static final String ACTION_SAVE_NOW = "com.inaki.micoche.SAVE_NOW";
-    public static final String ACTION_PARKING_NOW = "com.inaki.micoche.PARKING_NOW";
-    public static final String ACTION_RESOLVE_PARKING = "com.inaki.micoche.RESOLVE_PARKING";
+    public static final String ACTION_PARKING = "com.inaki.micoche.PARKING";
 
     private static final int REQ_LOCATION = 10;
     private static final int REQ_BT_CONNECT = 20;
@@ -80,13 +78,14 @@ public class MainActivity extends Activity {
 
     private boolean pendingChooseCarAfterBluetoothPermission = false;
     private boolean pendingManualSaveAfterLocationPermission = false;
-    private boolean pendingParkingAfterLocationPermission = false;
     private boolean pendingAutoPermissionGuide = false;
     private View currentSettingsView;
     private AlertDialog currentSettingsDialog;
     private float settingsGestureStartX;
     private ValueAnimator settingsHintAnimator;
     private boolean initialMapLocationRequested;
+    private Uri pendingParkingPhotoUri;
+    private LocationListener parkingLocationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +106,13 @@ public class MainActivity extends Activity {
         refreshUi();
         refreshDistanceFromLastKnown();
 
-        handleExternalAction(getIntent());
+        if (ACTION_SAVE_NOW.equals(getIntent().getAction())) {
+            rootView.postDelayed(this::saveCurrentLocation, 250);
+        } else if (ACTION_PARKING.equals(getIntent().getAction())) {
+            rootView.postDelayed(this::startParkingPhoto, 250);
+        } else if (ParkingPrefs.pending(this)) {
+            rootView.postDelayed(this::resumePendingParkingLocation, 500);
+        }
     }
 
     private void bindViews() {
@@ -188,7 +193,7 @@ public class MainActivity extends Activity {
 
     private void configureActions() {
         findViewById(R.id.saveButton).setOnClickListener(v -> saveCurrentLocation());
-        findViewById(R.id.parkingButton).setOnClickListener(v -> startParkingFlow());
+        findViewById(R.id.parkingButton).setOnClickListener(v -> startParkingPhoto());
         navButton.setOnClickListener(v -> navigateToCar());
         findViewById(R.id.shareButton).setOnClickListener(v -> shareCar());
         findViewById(R.id.deleteButton).setOnClickListener(v -> deleteCar());
@@ -847,84 +852,69 @@ public class MainActivity extends Activity {
                 .show();
     }
 
-    private void handleExternalAction(Intent intent) {
-        if (intent == null) return;
-        String action = intent.getAction();
-        if (ACTION_SAVE_NOW.equals(action)) {
-            rootView.postDelayed(this::saveCurrentLocation, 200);
-        } else if (ACTION_PARKING_NOW.equals(action)) {
-            rootView.postDelayed(this::startParkingFlow, 200);
-        } else if (ACTION_RESOLVE_PARKING.equals(action)) {
-            rootView.postDelayed(this::showParkingFallback, 200);
+    // -------------------------------------------------------------------------
+    // PARKING: primero foto; después, y sólo después, primera ubicación válida.
+    // -------------------------------------------------------------------------
+    private void startParkingPhoto() {
+        try {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, "parking_" + System.currentTimeMillis() + ".jpg");
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+            if (Build.VERSION.SDK_INT >= 29) values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/WhereIsMyCar");
+            pendingParkingPhotoUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            if (pendingParkingPhotoUri == null) throw new IllegalStateException("No se pudo crear la foto");
+            Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            camera.putExtra(MediaStore.EXTRA_OUTPUT, pendingParkingPhotoUri);
+            camera.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivityForResult(camera, REQ_PARKING_PHOTO);
+        } catch (Exception e) {
+            Toast.makeText(this, "No he podido abrir la cámara.", Toast.LENGTH_LONG).show();
         }
     }
 
-    private void startParkingFlow() {
+    private void resumePendingParkingLocation() {
+        if (!ParkingPrefs.pending(this)) return;
         if (!hasLocationPermission()) {
-            pendingParkingAfterLocationPermission = true;
-            pendingManualSaveAfterLocationPermission = false;
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_LOCATION);
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQ_LOCATION);
             return;
         }
-        final long startedAt = System.currentTimeMillis();
-        Toast.makeText(this, "Buscando GPS del parking…", Toast.LENGTH_SHORT).show();
-        requestFreshLocation(location -> {
-            if (location != null && location.getTime() >= startedAt) {
-                saveParkingLocation(location);
-            } else {
-                showParkingFallback();
+        if (!isAnyProviderEnabled()) return;
+        stopParkingLocationUpdates();
+        String provider = bestProvider();
+        if (provider == null) return;
+        final long after = ParkingPrefs.time(this);
+        parkingLocationListener = new LocationListener() {
+            @Override public void onLocationChanged(Location location) {
+                if (!ParkingPrefs.pending(MainActivity.this) || location == null) return;
+                if (location.getTime() < after) return;
+                if (location.hasAccuracy() && location.getAccuracy() > 100f) return;
+                savePendingParkingLocation(location);
             }
-        });
+            @Override public void onProviderEnabled(String provider) {}
+            @Override public void onProviderDisabled(String provider) {}
+            @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
+        };
+        try {
+            locationManager.requestLocationUpdates(provider, 1500L, 0f, parkingLocationListener);
+        } catch (SecurityException ignored) {}
     }
 
-    private void saveParkingLocation(Location location) {
-        double lat = location.getLatitude();
-        double lon = location.getLongitude();
-        CarStorage.save(this, lat, lon, "Obteniendo dirección…",
-                System.currentTimeMillis(), CarStorage.SOURCE_PARKING);
-        AutoParkingPrefs.setParkingPending(this, false);
+    private void savePendingParkingLocation(Location location) {
+        stopParkingLocationUpdates();
+        double lat = location.getLatitude(), lon = location.getLongitude();
+        CarStorage.save(this, lat, lon, "Parking · foto guardada", System.currentTimeMillis(), CarStorage.SOURCE_MANUAL);
+        ParkingPrefs.clear(this);
         refreshUi();
+        updateDistance(location);
         CarWidgetProvider.updateAll(this);
         reverseGeocodeAndSave(lat, lon);
-        Toast.makeText(this, "Parking guardado", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Parking completado. Ubicación guardada.", Toast.LENGTH_LONG).show();
     }
 
-    private void showParkingFallback() {
-        new AlertDialog.Builder(this)
-                .setTitle("Parking sin GPS")
-                .setMessage("¿Dónde has aparcado?")
-                .setItems(new String[]{"Casa", "Casa 2", "Trabajo", "Hacer foto"}, (d, which) -> {
-                    if (which == 0) saveKnownGarage("home", "Casa");
-                    else if (which == 1) saveKnownGarage("home2", "Casa 2");
-                    else if (which == 2) saveKnownGarage("work", "Trabajo");
-                    else takeParkingPhoto();
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-
-    private void saveKnownGarage(String key, String title) {
-        if (!GaragePrefs.has(this, key)) {
-            Toast.makeText(this, title + " todavía no tiene posición guardada.", Toast.LENGTH_LONG).show();
-            takeParkingPhoto();
-            return;
-        }
-        double lat = GaragePrefs.lat(this, key);
-        double lon = GaragePrefs.lon(this, key);
-        CarStorage.save(this, lat, lon, title + " · parking",
-                System.currentTimeMillis(), CarStorage.SOURCE_PARKING);
-        AutoParkingPrefs.setParkingPending(this, false);
-        refreshUi();
-        CarWidgetProvider.updateAll(this);
-    }
-
-    private void takeParkingPhoto() {
-        Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (camera.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(camera, REQ_PARKING_PHOTO);
-        } else {
-            Toast.makeText(this, "No encuentro una aplicación de cámara.", Toast.LENGTH_LONG).show();
+    private void stopParkingLocationUpdates() {
+        if (parkingLocationListener != null && locationManager != null) {
+            try { locationManager.removeUpdates(parkingLocationListener); } catch (SecurityException ignored) {}
+            parkingLocationListener = null;
         }
     }
 
@@ -1337,17 +1327,16 @@ public class MainActivity extends Activity {
                 data);
 
         if (requestCode == REQ_PARKING_PHOTO) {
-            if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
-                Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-                if (bitmap != null) {
-                    try (FileOutputStream out = openFileOutput("parking_photo.jpg", MODE_PRIVATE)) {
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out);
-                    } catch (Exception ignored) {}
-                }
-                AutoParkingPrefs.setParkingPending(this, true);
-                CarWidgetProvider.updateAll(this);
-                Toast.makeText(this, "Foto guardada. Completaré la posición cuando vuelva el GPS.", Toast.LENGTH_LONG).show();
+            if (resultCode != RESULT_OK) {
+                if (pendingParkingPhotoUri != null) getContentResolver().delete(pendingParkingPhotoUri, null, null);
+                pendingParkingPhotoUri = null;
+                return;
             }
+            long photoTime = System.currentTimeMillis();
+            ParkingPrefs.begin(this, pendingParkingPhotoUri == null ? "" : pendingParkingPhotoUri.toString(), photoTime);
+            pendingParkingPhotoUri = null;
+            Toast.makeText(this, "Foto guardada. Esperando la primera ubicación al salir…", Toast.LENGTH_LONG).show();
+            resumePendingParkingLocation();
             return;
         }
 
@@ -1457,10 +1446,7 @@ public class MainActivity extends Activity {
 
         if (requestCode == REQ_LOCATION) {
             if (hasLocationPermission()) {
-                if (pendingParkingAfterLocationPermission) {
-                    pendingParkingAfterLocationPermission = false;
-                    startParkingFlow();
-                } else if (pendingManualSaveAfterLocationPermission) {
+                if (pendingManualSaveAfterLocationPermission) {
                     pendingManualSaveAfterLocationPermission = false;
                     pendingAutoPermissionGuide = false;
                     saveCurrentLocation();
@@ -1470,7 +1456,6 @@ public class MainActivity extends Activity {
                 }
             } else {
                 pendingManualSaveAfterLocationPermission = false;
-                pendingParkingAfterLocationPermission = false;
                 pendingAutoPermissionGuide = false;
                 Toast.makeText(
                         this,
@@ -1479,6 +1464,9 @@ public class MainActivity extends Activity {
             }
         }
 
+        if (ParkingPrefs.pending(this) && hasLocationPermission()) {
+            resumePendingParkingLocation();
+        }
         if (currentSettingsView != null) {
             updateSettingsView(currentSettingsView);
         }
@@ -1489,7 +1477,11 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
 
-        handleExternalAction(intent);
+        if (ACTION_SAVE_NOW.equals(intent.getAction())) {
+            rootView.postDelayed(this::saveCurrentLocation, 150);
+        } else if (ACTION_PARKING.equals(intent.getAction())) {
+            rootView.postDelayed(this::startParkingPhoto, 150);
+        }
     }
 
     @Override
@@ -1499,12 +1491,7 @@ public class MainActivity extends Activity {
         AutoParkingManager.ensureObservation(this);
 
         refreshUi();
-
-        if (AutoParkingPrefs.parkingPending(this) && hasLocationPermission()) {
-            requestFreshLocation(location -> {
-                if (location != null) saveParkingLocation(location);
-            });
-        }
+        if (ParkingPrefs.pending(this)) resumePendingParkingLocation();
 
         if (locationManager != null) {
             refreshDistanceFromLastKnown();

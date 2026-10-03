@@ -14,7 +14,6 @@ public final class CarStorage {
 
     public static final String SOURCE_MANUAL = "manual";
     public static final String SOURCE_AUTO = "auto";
-    public static final String SOURCE_PARKING = "parking";
 
     private CarStorage() {}
 
